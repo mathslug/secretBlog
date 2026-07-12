@@ -40,21 +40,21 @@ router.post('/signup', rateLimit, (req, res) => {
   const fail = (msg) => res.redirect('/signup?err=' + encodeURIComponent(msg));
   const invite = String(req.body.invite || '');
   const username = String(req.body.username || '').trim().toLowerCase();
-  const displayName = String(req.body.display_name || '').trim();
   const password = String(req.body.password || '');
 
   if (!safeEqual(invite, config.inviteCode)) return fail('Wrong invite code.');
   if (!/^[a-z0-9_]{3,20}$/.test(username)) {
     return fail('Username must be 3–20 characters: lowercase letters, digits, underscores.');
   }
-  if (!displayName || displayName.length > 40) return fail('Display name must be 1–40 characters.');
   if (password.length < 8) return fail('Password must be at least 8 characters.');
 
   let info;
   try {
+    // Display name mirrors the username for now; the column exists in case
+    // we ever let people edit it.
     info = db.prepare(
       'INSERT INTO users (username, display_name, password_hash) VALUES (?, ?, ?)'
-    ).run(username, displayName, hashPassword(password));
+    ).run(username, username, hashPassword(password));
   } catch (e) {
     if (isConstraintError(e)) return fail('That username is taken.');
     throw e;

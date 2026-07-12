@@ -39,7 +39,7 @@
   <% } %>
 
   <h2>Your friends (<%= friends.length %>)</h2>
-  <% if (friends.length === 0) { %><p class="empty-inline">None yet — ask for usernames and add them above.</p><% } %>
+  <% if (friends.length === 0) { %><p class="empty-inline">no friends :( ask people for their usernames</p><% } %>
   <% friends.forEach(function (f) { %>
     <div class="friend-row">
       <a href="/u/<%= f.username %>"><strong><%= f.display_name %></strong> <span class="handle">@<%= f.username %></span></a>
