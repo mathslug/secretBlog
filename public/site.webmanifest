@@ -1,7 +1,7 @@
 {
   "name": "Slug Club",
   "short_name": "Slug Club",
-  "description": "One photo a day. An essay every few. Friends only.",
+  "description": "special secret blog for secret friends",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
