@@ -104,28 +104,31 @@ router.post('/posts', requireAuth, upload.single('photo'), async (req, res, next
 
     if (type === 'photo') {
       if (!status.canPhoto) {
-        return fail(`You have ${status.photosSinceEssay} photos since your last essay — time to write one.`);
+        return fail(`You have ${status.photosSinceEssay} short posts since your last essay — time to write one.`);
       }
-      if (!req.file) return fail('Pick a photo to post.');
-      caption = String(req.body.caption || '').trim();
-      if (caption.length > config.limits.caption) {
-        return fail(`Caption must be at most ${config.limits.caption} characters.`);
+      caption = String(req.body.caption || '').trim() || null;
+      if (caption && caption.length > config.limits.caption) {
+        return fail(`Text must be at most ${config.limits.caption} characters.`);
       }
-      const crop = {
-        x: Number(req.body.cropX),
-        y: Number(req.body.cropY),
-        size: Number(req.body.cropSize)
-      };
-      try {
-        image = await processPhoto(req.file.buffer, crop);
-      } catch (e) {
-        console.error('image processing failed:', e.message);
-        return fail('Could not read that image. Try a JPEG or PNG.');
+      // A short post is a photo (caption optional) or just text.
+      if (!req.file && !caption) return fail('Add a photo or write something.');
+      if (req.file) {
+        const crop = {
+          x: Number(req.body.cropX),
+          y: Number(req.body.cropY),
+          size: Number(req.body.cropSize)
+        };
+        try {
+          image = await processPhoto(req.file.buffer, crop);
+        } catch (e) {
+          console.error('image processing failed:', e.message);
+          return fail('Could not read that image. Try a JPEG or PNG.');
+        }
       }
     } else {
       if (!status.canEssay) {
         const need = status.essayAllowedAfterPhotos - status.photosSinceEssay;
-        return fail(`Essays unlock after ${status.essayAllowedAfterPhotos} photos — ${need} more to go.`);
+        return fail(`Essays unlock after ${status.essayAllowedAfterPhotos} short posts — ${need} more to go.`);
       }
       body = String(req.body.body || '').replace(/\r\n/g, '\n').trim();
       if (body.length < config.limits.essayMin || body.length > config.limits.essayMax) {

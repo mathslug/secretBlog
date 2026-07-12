@@ -6,14 +6,15 @@ essay every few, friends only. No likes, no messages, no algorithm.
 ## The rules
 
 - **One post per day** (calendar day in `APP_TZ`, default America/New_York).
-- A post is a **photo** or an **essay**:
-  - **Photo**: square-cropped (you pick the crop and zoom at upload — that is
-    the only editing there is), optional caption up to **256** characters.
-    The server re-encodes to a ≤1080×1080 WebP.
+- A post is a **short post** or an **essay**:
+  - **Short post**: a photo, a bit of text (up to **256** characters, shown
+    tweet-style in the feed), or both (the text becomes the caption). Photos
+    are square-cropped (you pick the crop and zoom at upload — that is the
+    only editing there is) and re-encoded to a ≤1080×1080 WebP.
   - **Essay**: **2,048–8,192** characters (2¹¹–2¹³ — roughly 3.5 to 10
     paragraphs). Essays appear in the feed collapsed to the first few lines.
-- **Essay cadence**: essays unlock after **2** photos since your last essay,
-  and after **4** photos your next post *must* be an essay.
+- **Essay cadence**: essays unlock after **2** short posts since your last
+  essay, and after **4** short posts your next post *must* be an essay.
 - **Comments** up to **128** characters. The first two show; the rest expand.
 - Signup requires the invite code. Feeds show you + your friends only.
 - New members automatically start out friends with `mathslug`

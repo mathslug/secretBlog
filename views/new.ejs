@@ -16,13 +16,13 @@
     </div>
   <% } else { %>
     <p class="rule-note">
-      <%= status.photosSinceEssay %> photo<%= status.photosSinceEssay === 1 ? '' : 's' %> since your last essay.
-      Essays unlock at <%= status.essayAllowedAfterPhotos %>; after <%= status.essayRequiredAfterPhotos %> photos your next post must be an essay.
+      <%= status.photosSinceEssay %> short post<%= status.photosSinceEssay === 1 ? '' : 's' %> since your last essay.
+      Essays unlock at <%= status.essayAllowedAfterPhotos %>; after <%= status.essayRequiredAfterPhotos %> short posts your next post must be an essay.
     </p>
 
     <% if (status.canPhoto && status.canEssay) { %>
       <div class="tabs">
-        <button type="button" class="tab active" data-tab="photo">Photo</button>
+        <button type="button" class="tab active" data-tab="photo">Short post</button>
         <button type="button" class="tab" data-tab="essay">Essay</button>
       </div>
     <% } %>
@@ -32,7 +32,7 @@
             class="<%= status.canEssay && status.canPhoto ? '' : '' %>">
         <input type="hidden" name="type" value="photo">
         <label class="file-label">
-          <input type="file" name="photo" id="photo-input" accept="image/*" required>
+          <input type="file" name="photo" id="photo-input" accept="image/*">
         </label>
         <div id="crop-wrap" class="hidden">
           <div id="crop-stage"><img id="crop-img" alt="" draggable="false"></div>
@@ -43,9 +43,9 @@
         </div>
         <input type="hidden" name="cropX"><input type="hidden" name="cropY"><input type="hidden" name="cropSize">
         <textarea name="caption" maxlength="<%= limits.caption %>" rows="3"
-                  placeholder="Caption (optional, <%= limits.caption %> characters max)" data-count="cap-count"></textarea>
+                  placeholder="Say something (<%= limits.caption %> characters max) — with a photo it's the caption, without one it stands alone" data-count="cap-count"></textarea>
         <div class="charcount"><span id="cap-count">0</span>/<%= limits.caption %></div>
-        <button class="primary">Post photo</button>
+        <button class="primary">Post</button>
       </form>
     <% } %>
 

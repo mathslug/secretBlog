@@ -2,12 +2,10 @@
 <div class="feed">
   <% if (!status.postedToday) { %>
     <div class="compose-nudge">
-      <% if (status.canPhoto && status.canEssay) { %>
-        <a href="/new">You haven't posted today — share a photo or an essay</a>
-      <% } else if (status.canPhoto) { %>
-        <a href="/new">You haven't posted today — share a photo</a>
+      <% if (status.canPhoto) { %>
+        <a href="/new">You haven't posted today — share something</a>
       <% } else { %>
-        <a href="/new">You haven't posted today — essay time (<%= status.photosSinceEssay %> photos since your last)</a>
+        <a href="/new">You haven't posted today — essay time (<%= status.photosSinceEssay %> short posts since your last)</a>
       <% } %>
     </div>
   <% } %>

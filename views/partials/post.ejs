@@ -6,9 +6,13 @@
   </header>
 
   <% if (post.type === 'photo') { %>
-    <img class="post-photo" src="/img/<%= post.image %>" alt="Photo by <%= post.display_name %>" loading="lazy">
-    <% if (post.caption) { %>
-      <p class="caption"><span class="caption-author"><%= post.username %></span> <%= post.caption %></p>
+    <% if (post.image) { %>
+      <img class="post-photo" src="/img/<%= post.image %>" alt="Photo by <%= post.display_name %>" loading="lazy">
+      <% if (post.caption) { %>
+        <p class="caption"><span class="caption-author"><%= post.username %></span> <%= post.caption %></p>
+      <% } %>
+    <% } else { %>
+      <p class="short-text"><%= post.caption %></p>
     <% } %>
   <% } else { %>
     <div class="essay<%= locals.expandEssay ? '' : ' collapsed' %>">
