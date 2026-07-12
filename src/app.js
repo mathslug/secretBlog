@@ -10,7 +10,10 @@ app.set('views', path.join(__dirname, '..', 'views'));
 app.set('trust proxy', true);
 
 app.use(express.urlencoded({ extended: false, limit: '64kb' }));
-app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: '7d' }));
+// Assets keep their names across deploys, so browsers must revalidate them
+// (ETag 304s are cheap at this scale). Photos are immutable and get long
+// cache headers from their own route.
+app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: 0 }));
 
 // Same-origin check for all state-changing requests (CSRF guard alongside
 // SameSite=Lax cookies).

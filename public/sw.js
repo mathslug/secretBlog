@@ -1,7 +1,7 @@
 // Conservative service worker: HTML is never cached (the feed is dynamic and
 // auth-gated), static assets are stale-while-revalidate, and photos — which
 // are immutable and randomly named — are cache-first with a size cap.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const STATIC_CACHE = `static-${VERSION}`;
 const IMG_CACHE = 'images-v1';
 const MAX_IMAGES = 300;
@@ -57,7 +57,9 @@ self.addEventListener('fetch', (e) => {
     e.respondWith((async () => {
       const cache = await caches.open(STATIC_CACHE);
       const hit = await cache.match(e.request);
-      const refresh = fetch(e.request).then((res) => {
+      // no-cache forces revalidation against the server rather than the
+      // HTTP cache, so the background refresh actually picks up deploys.
+      const refresh = fetch(e.request, { cache: 'no-cache' }).then((res) => {
         if (res.ok) cache.put(e.request, res.clone());
         return res;
       }).catch(() => hit);
