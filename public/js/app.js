@@ -35,6 +35,17 @@ document.addEventListener('click', function (e) {
   }
 });
 
+// Typing in the friends search narrows the Everyone list.
+var friendFilter = document.getElementById('friend-filter');
+if (friendFilter) {
+  friendFilter.addEventListener('input', function () {
+    var q = friendFilter.value.trim().toLowerCase().replace(/^@/, '');
+    document.querySelectorAll('#directory .friend-row').forEach(function (row) {
+      row.classList.toggle('hidden', q !== '' && row.dataset.username.indexOf(q) === -1);
+    });
+  });
+}
+
 // Live character counters for textareas with data-count="<span id>".
 document.querySelectorAll('textarea[data-count]').forEach(function (ta) {
   var span = document.getElementById(ta.dataset.count);

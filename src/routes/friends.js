@@ -14,18 +14,42 @@ router.get('/friends', requireAuth, (req, res) => {
      ORDER BY u.username`
   ).all(me, me, me);
   const incoming = db.prepare(
-    `SELECT r.id, u.username, u.display_name FROM friend_requests r
+    `SELECT r.id, u.id AS user_id, u.username, u.display_name FROM friend_requests r
      JOIN users u ON u.id = r.from_id WHERE r.to_id = ? ORDER BY r.id DESC`
   ).all(me);
   const outgoing = db.prepare(
-    `SELECT r.id, u.username, u.display_name FROM friend_requests r
+    `SELECT r.id, u.id AS user_id, u.username, u.display_name FROM friend_requests r
      JOIN users u ON u.id = r.to_id WHERE r.from_id = ? ORDER BY r.id DESC`
   ).all(me);
+
+  // Everyone on the site, ranked by mutual friends (not displayed), then name.
+  const everyone = db.prepare(
+    `SELECT u.id, u.username,
+       (SELECT COUNT(*) FROM friendships f1
+         WHERE (f1.user_a = u.id OR f1.user_b = u.id)
+           AND (CASE WHEN f1.user_a = u.id THEN f1.user_b ELSE f1.user_a END) IN (
+             SELECT CASE WHEN f2.user_a = ? THEN f2.user_b ELSE f2.user_a END
+             FROM friendships f2 WHERE f2.user_a = ? OR f2.user_b = ?)
+       ) AS mutuals
+     FROM users u WHERE u.id != ?
+     ORDER BY mutuals DESC, u.username ASC`
+  ).all(me, me, me, me);
+  const friendIds = new Set(friends.map((f) => f.id));
+  const incomingByUser = new Map(incoming.map((r) => [r.user_id, r.id]));
+  const outgoingUsers = new Set(outgoing.map((r) => r.user_id));
+  const directory = everyone.map((p) => ({
+    username: p.username,
+    isFriend: friendIds.has(p.id),
+    incomingId: incomingByUser.get(p.id) || null,
+    requested: outgoingUsers.has(p.id)
+  }));
+
   res.render('friends', {
     title: 'Friends',
     friends,
     incoming,
     outgoing,
+    directory,
     error: req.query.err || null,
     notice: req.query.ok || null
   });
