@@ -48,3 +48,7 @@ document.querySelectorAll('textarea[data-count]').forEach(function (ta) {
   ta.addEventListener('input', update);
   update();
 });
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
