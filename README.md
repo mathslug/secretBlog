@@ -16,6 +16,9 @@ essay every few, friends only. No likes, no messages, no algorithm.
   and after **4** photos your next post *must* be an essay.
 - **Comments** up to **128** characters. The first two show; the rest expand.
 - Signup requires the invite code. Feeds show you + your friends only.
+- New members automatically start out friends with `mathslug`
+  (`AUTO_FRIEND_USERNAME`) so the feed isn't empty on day one; that
+  friendship can be removed like any other.
 
 ## Stack
 

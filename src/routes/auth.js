@@ -59,7 +59,15 @@ router.post('/signup', rateLimit, (req, res) => {
     if (isConstraintError(e)) return fail('That username is taken.');
     throw e;
   }
-  setSessionCookie(res, createSession(info.lastInsertRowid));
+  const newId = Number(info.lastInsertRowid);
+
+  const founder = db.prepare('SELECT id FROM users WHERE username = ?').get(config.autoFriend);
+  if (founder && founder.id !== newId) {
+    const [a, b] = founder.id < newId ? [founder.id, newId] : [newId, founder.id];
+    db.prepare('INSERT OR IGNORE INTO friendships (user_a, user_b) VALUES (?, ?)').run(a, b);
+  }
+
+  setSessionCookie(res, createSession(newId));
   res.redirect('/friends');
 });
 
