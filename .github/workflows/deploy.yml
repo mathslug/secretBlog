@@ -1,0 +1,50 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Write environment file
+        run: |
+          cat > "$RUNNER_TEMP/slugclub.env" <<EOF
+          PORT=3000
+          NODE_ENV=production
+          DATA_DIR=/srv/app-data
+          DOMAIN=${{ vars.DOMAIN }}
+          APP_TZ=${{ vars.APP_TZ }}
+          INVITE_CODE=${{ secrets.INVITE_CODE }}
+          EOF
+
+      - name: Sync app to server
+        run: |
+          rsync -az --delete \
+            --exclude .git --exclude node_modules --exclude data \
+            --rsync-path="mkdir -p /srv/app && rsync" \
+            ./ root@${{ secrets.DEPLOY_HOST }}:/srv/app/
+          scp "$RUNNER_TEMP/slugclub.env" root@${{ secrets.DEPLOY_HOST }}:/etc/slugclub.env
+
+      - name: Deploy
+        run: |
+          ssh root@${{ secrets.DEPLOY_HOST }} \
+            'chmod 600 /etc/slugclub.env && bash /srv/app/deploy/deploy.sh'

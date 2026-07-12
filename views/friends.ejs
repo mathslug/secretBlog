@@ -1,0 +1,53 @@
+<%- include('partials/header') %>
+<div class="friends-page">
+  <h1>Friends</h1>
+  <% if (error) { %><p class="flash error"><%= error %></p><% } %>
+  <% if (notice) { %><p class="flash ok"><%= notice %></p><% } %>
+
+  <form method="post" action="/friends/request" class="friend-add">
+    <input name="username" placeholder="Add a friend by username" autocomplete="off" required>
+    <button>Send request</button>
+  </form>
+
+  <% if (incoming.length) { %>
+    <h2>Requests for you</h2>
+    <% incoming.forEach(function (r) { %>
+      <div class="friend-row">
+        <span><strong><%= r.display_name %></strong> <span class="handle">@<%= r.username %></span></span>
+        <span class="friend-actions">
+          <form method="post" action="/friends/accept" class="inline-form">
+            <input type="hidden" name="request_id" value="<%= r.id %>"><button>Accept</button>
+          </form>
+          <form method="post" action="/friends/decline" class="inline-form">
+            <input type="hidden" name="request_id" value="<%= r.id %>"><button class="linklike">Decline</button>
+          </form>
+        </span>
+      </div>
+    <% }) %>
+  <% } %>
+
+  <% if (outgoing.length) { %>
+    <h2>Sent requests</h2>
+    <% outgoing.forEach(function (r) { %>
+      <div class="friend-row">
+        <span><strong><%= r.display_name %></strong> <span class="handle">@<%= r.username %></span></span>
+        <form method="post" action="/friends/decline" class="inline-form">
+          <input type="hidden" name="request_id" value="<%= r.id %>"><button class="linklike">Cancel</button>
+        </form>
+      </div>
+    <% }) %>
+  <% } %>
+
+  <h2>Your friends (<%= friends.length %>)</h2>
+  <% if (friends.length === 0) { %><p class="empty-inline">None yet — ask for usernames and add them above.</p><% } %>
+  <% friends.forEach(function (f) { %>
+    <div class="friend-row">
+      <a href="/u/<%= f.username %>"><strong><%= f.display_name %></strong> <span class="handle">@<%= f.username %></span></a>
+      <form method="post" action="/friends/remove" class="inline-form"
+            onsubmit="return confirm('Remove @<%= f.username %> as a friend?')">
+        <input type="hidden" name="user_id" value="<%= f.id %>"><button class="linklike danger">Remove</button>
+      </form>
+    </div>
+  <% }) %>
+</div>
+<%- include('partials/footer') %>

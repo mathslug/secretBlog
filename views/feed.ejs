@@ -1,0 +1,30 @@
+<%- include('partials/header') %>
+<div class="feed">
+  <% if (!status.postedToday) { %>
+    <div class="compose-nudge">
+      <% if (status.canPhoto && status.canEssay) { %>
+        <a href="/new">You haven't posted today — share a photo or an essay</a>
+      <% } else if (status.canPhoto) { %>
+        <a href="/new">You haven't posted today — share a photo</a>
+      <% } else { %>
+        <a href="/new">You haven't posted today — essay time (<%= status.photosSinceEssay %> photos since your last)</a>
+      <% } %>
+    </div>
+  <% } %>
+
+  <% if (posts.length === 0) { %>
+    <div class="empty">
+      <p>Nothing here yet.</p>
+      <p><a href="/friends">Add some friends</a> or <a href="/new">make your first post</a>.</p>
+    </div>
+  <% } %>
+
+  <% posts.forEach(function (post) { %>
+    <%- include('partials/post', { post: post }) %>
+  <% }) %>
+
+  <% if (hasMore) { %>
+    <a class="load-more" href="/?before=<%= nextCursor %>">Load more</a>
+  <% } %>
+</div>
+<%- include('partials/footer') %>

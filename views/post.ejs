@@ -1,0 +1,11 @@
+<%- include('partials/header') %>
+<div class="feed">
+  <%- include('partials/post', { post: post }) %>
+  <% if (post.user_id === user.id) { %>
+    <form method="post" action="/post/<%= post.id %>/delete" class="post-delete"
+          onsubmit="return confirm('Delete this post? This cannot be undone.')">
+      <button class="linklike danger">Delete this post</button>
+    </form>
+  <% } %>
+</div>
+<%- include('partials/footer') %>

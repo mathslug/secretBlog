@@ -1,0 +1,14 @@
+<%- include('partials/header') %>
+<div class="feed">
+  <div class="profile-head">
+    <h1><%= person.display_name %></h1>
+    <p class="handle">@<%= person.username %> · <%= posts.length %> post<%= posts.length === 1 ? '' : 's' %></p>
+  </div>
+  <% if (posts.length === 0) { %>
+    <div class="empty"><p>No posts yet.</p></div>
+  <% } %>
+  <% posts.forEach(function (post) { %>
+    <%- include('partials/post', { post: post }) %>
+  <% }) %>
+</div>
+<%- include('partials/footer') %>

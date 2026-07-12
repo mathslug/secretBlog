@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title><%= locals.title || 'Slug Club' %> · Slug Club</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐌</text></svg>">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<% if (locals.user) { %>
+<nav class="topnav">
+  <a href="/" class="brand">🐌 Slug Club</a>
+  <div class="nav-links">
+    <a href="/new" class="nav-new">＋ Post</a>
+    <a href="/friends">Friends<% if (locals.pendingCount) { %><span class="badge"><%= pendingCount %></span><% } %></a>
+    <a href="/u/<%= user.username %>">Me</a>
+    <form method="post" action="/logout" class="inline-form"><button class="linklike">Log out</button></form>
+  </div>
+</nav>
+<% } %>
+<main>

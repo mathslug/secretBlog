@@ -1,0 +1,42 @@
+<article class="post" id="post-<%= post.id %>">
+  <header class="post-header">
+    <a class="author" href="/u/<%= post.username %>"><%= post.display_name %></a>
+    <span class="handle">@<%= post.username %></span>
+    <a class="timestamp" href="/post/<%= post.id %>"><%= fmtTime(post.created_at) %></a>
+  </header>
+
+  <% if (post.type === 'photo') { %>
+    <img class="post-photo" src="/img/<%= post.image %>" alt="Photo by <%= post.display_name %>" loading="lazy">
+    <% if (post.caption) { %>
+      <p class="caption"><span class="caption-author"><%= post.username %></span> <%= post.caption %></p>
+    <% } %>
+  <% } else { %>
+    <div class="essay<%= locals.expandEssay ? '' : ' collapsed' %>">
+      <div class="essay-body"><%= post.body %></div>
+      <% if (!locals.expandEssay) { %>
+        <a class="essay-toggle" href="/post/<%= post.id %>" data-more="Read more" data-less="Show less">Read more</a>
+      <% } %>
+    </div>
+  <% } %>
+
+  <div class="comments">
+    <% post.comments.forEach(function (c, i) { %>
+      <div class="comment<%= (!expandComments && i >= 2) ? ' hidden-comment' : '' %>">
+        <a class="comment-author" href="/u/<%= c.username %>"><%= c.username %></a>
+        <span class="comment-body"><%= c.body %></span>
+        <% if (c.user_id === user.id || post.user_id === user.id) { %>
+          <form method="post" action="/comments/<%= c.id %>/delete" class="inline-form comment-delete">
+            <button class="linklike danger" title="Delete comment">×</button>
+          </form>
+        <% } %>
+      </div>
+    <% }) %>
+    <% if (!expandComments && post.comments.length > 2) { %>
+      <a class="comments-toggle" href="/post/<%= post.id %>">View all <%= post.comments.length %> comments</a>
+    <% } %>
+    <form method="post" action="/post/<%= post.id %>/comments" class="comment-form">
+      <input name="body" maxlength="<%= limits.comment %>" placeholder="Add a comment…" autocomplete="off" required>
+      <button>Post</button>
+    </form>
+  </div>
+</article>
