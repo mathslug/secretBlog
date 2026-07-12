@@ -10,7 +10,9 @@ const STATIC_ASSETS = ['/css/style.css', '/js/app.js', '/js/crop.js', '/site.web
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(STATIC_CACHE)
-      .then((c) => c.addAll(STATIC_ASSETS))
+      // cache: 'reload' skips the HTTP cache so a new SW never precaches
+      // the very files it was updated to replace.
+      .then((c) => c.addAll(STATIC_ASSETS.map((u) => new Request(u, { cache: 'reload' }))))
       .then(() => self.skipWaiting())
   );
 });
