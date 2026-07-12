@@ -52,3 +52,45 @@ document.querySelectorAll('textarea[data-count]').forEach(function (ta) {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
 }
+
+// Home-screen install nudge (rendered on /new once you've posted today).
+// Chromium fires beforeinstallprompt, letting a button trigger the real
+// install dialog; iOS has no API, so it gets Share-menu instructions.
+var deferredInstall = null;
+
+function updateInstallNudge() {
+  var nudge = document.getElementById('install-nudge');
+  if (!nudge) return;
+  var standalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+  if (standalone) {
+    nudge.classList.add('hidden');
+    return;
+  }
+  var isIos = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  nudge.classList.remove('hidden');
+  document.getElementById('install-btn').classList.toggle('hidden', !deferredInstall);
+  document.getElementById('install-ios').classList.toggle('hidden', !!deferredInstall || !isIos);
+  document.getElementById('install-generic').classList.toggle('hidden', !!deferredInstall || isIos);
+}
+
+window.addEventListener('beforeinstallprompt', function (e) {
+  e.preventDefault();
+  deferredInstall = e;
+  updateInstallNudge();
+});
+
+window.addEventListener('appinstalled', function () {
+  deferredInstall = null;
+  var nudge = document.getElementById('install-nudge');
+  if (nudge) nudge.classList.add('hidden');
+});
+
+document.addEventListener('click', function (e) {
+  if (e.target.id === 'install-btn' && deferredInstall) {
+    deferredInstall.prompt();
+    deferredInstall = null;
+  }
+});
+
+updateInstallNudge();

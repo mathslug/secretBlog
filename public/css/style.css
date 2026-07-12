@@ -209,6 +209,18 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 .zoom-label { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.6rem; font-size: 0.9rem; color: var(--muted); }
 .zoom-label input { accent-color: var(--accent); }
 
+/* Install nudge */
+.install-nudge {
+  background: var(--card);
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+  color: var(--muted);
+}
+.install-title { font-weight: 600; color: var(--text); margin-bottom: 0.5rem; }
+.install-nudge .hint { margin-top: 0; }
+
 /* Friends */
 .friends-page h2 { font-size: 1rem; margin: 1.25rem 0 0.5rem; color: var(--muted); }
 .friend-add { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }

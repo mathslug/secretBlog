@@ -8,6 +8,12 @@
       <p>You already posted today. 🐌</p>
       <p>Come back tomorrow.</p>
     </div>
+    <div id="install-nudge" class="install-nudge hidden">
+      <p class="install-title">While you wait: put Slug Club on your home screen</p>
+      <button type="button" id="install-btn" class="hidden">Add to home screen</button>
+      <p id="install-ios" class="hint hidden">Open this site in Safari, tap the Share button (the square with the up arrow), then choose “Add to Home Screen”.</p>
+      <p id="install-generic" class="hint hidden">Open your browser’s menu and choose “Add to Home Screen” (sometimes called “Install app”).</p>
+    </div>
   <% } else { %>
     <p class="rule-note">
       <%= status.photosSinceEssay %> photo<%= status.photosSinceEssay === 1 ? '' : 's' %> since your last essay.
