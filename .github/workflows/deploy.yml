@@ -32,6 +32,7 @@ jobs:
           NODE_ENV=production
           DATA_DIR=/srv/app-data
           DOMAIN=${{ vars.DOMAIN }}
+          OLD_DOMAIN=${{ vars.OLD_DOMAIN }}
           APP_TZ=${{ vars.APP_TZ }}
           INVITE_CODE=${{ secrets.INVITE_CODE }}
           EOF

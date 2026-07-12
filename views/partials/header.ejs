@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <title><%= locals.title || 'Slug Club' %> · Slug Club</title>
+  <title><%= locals.title || 'Whorl' %> · Whorl</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐌</text></svg>">
   <link rel="manifest" href="/site.webmanifest">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -12,13 +12,13 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Slug Club">
+  <meta name="apple-mobile-web-app-title" content="Whorl">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 <% if (locals.user) { %>
 <nav class="topnav">
-  <a href="/" class="brand">🐌 Slug Club</a>
+  <a href="/" class="brand">🐌 Whorl</a>
   <div class="nav-links">
     <a href="/new" class="nav-new">＋ Post</a>
     <a href="/friends">Friends<% if (locals.pendingCount) { %><span class="badge"><%= pendingCount %></span><% } %></a>

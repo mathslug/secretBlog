@@ -1,7 +1,11 @@
-# 🐌 Slug Club
+# 🐌 Whorl
 
-A tiny private social site at **slugclub.mathslug.com**. One photo a day, an
+A tiny private social site at **whorl.mathslug.com** (the old
+slugclub.mathslug.com permanently redirects there). One short post a day, an
 essay every few, friends only. No likes, no messages, no algorithm.
+
+Internal names (the droplet, systemd service, env file, and system user) are
+still `slugclub` — only the public branding is Whorl.
 
 ## The rules
 
@@ -50,9 +54,10 @@ Every push to `main` runs `.github/workflows/deploy.yml`:
 3. Health-check the service; the run fails loudly if it isn't healthy.
 
 Configuration lives in GitHub Actions **secrets** (`DEPLOY_HOST`,
-`DEPLOY_SSH_KEY`, `INVITE_CODE`) and **variables** (`DOMAIN`, `APP_TZ`).
-To change the domain later: update the `DOMAIN` variable, add the new DNS
-record, re-run the workflow.
+`DEPLOY_SSH_KEY`, `INVITE_CODE`) and **variables** (`DOMAIN`, `OLD_DOMAIN`,
+`APP_TZ`). `OLD_DOMAIN` (optional) gets a permanent redirect to `DOMAIN`.
+To change the domain later: update the variables, add the new DNS record,
+re-run the workflow.
 
 ## Infrastructure (DigitalOcean, created via doctl)
 
@@ -64,8 +69,9 @@ record, re-run the workflow.
 - Deploy key: `~/.ssh/slugclub_deploy` (public key on the droplet, private
   key in the `DEPLOY_SSH_KEY` Actions secret).
 
-DNS (at Namecheap): `A slugclub → 24.199.66.225`. Caddy fetches the TLS
-certificate automatically once the record resolves.
+DNS (at Namecheap): `A whorl → 24.199.66.225`, plus the legacy
+`A slugclub → 24.199.66.225` that powers the redirect. Caddy fetches TLS
+certificates for both automatically once the records resolve.
 
 ### Rebuilding from scratch
 

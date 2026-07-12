@@ -50,6 +50,14 @@ install -m 644 "$APP_DIR/deploy/slugclub.service" /etc/systemd/system/slugclub.s
 # shellcheck disable=SC1091
 source /etc/slugclub.env
 sed "s/__DOMAIN__/${DOMAIN}/" "$APP_DIR/deploy/Caddyfile.tmpl" > /etc/caddy/Caddyfile
+if [ -n "${OLD_DOMAIN:-}" ]; then
+  cat >> /etc/caddy/Caddyfile <<CADDY
+
+${OLD_DOMAIN} {
+	redir https://${DOMAIN}{uri} permanent
+}
+CADDY
+fi
 systemctl daemon-reload
 systemctl enable slugclub caddy >/dev/null 2>&1 || true
 systemctl restart slugclub
