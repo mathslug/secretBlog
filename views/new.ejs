@@ -16,8 +16,12 @@
     </div>
   <% } else { %>
     <p class="rule-note">
-      <%= status.photosSinceEssay %> short post<%= status.photosSinceEssay === 1 ? '' : 's' %> since your last essay.
-      Essays unlock at <%= status.essayAllowedAfterPhotos %>; after <%= status.essayRequiredAfterPhotos %> short posts your next post must be an essay.
+      Whorl encourages both short and long-form writing. On most days, you can
+      post a picture and/or quip. Sometimes, you can post a longer piece.
+    </p>
+    <p class="rule-note">
+      It has been <%= status.photosSinceEssay %> short post<%= status.photosSinceEssay === 1 ? '' : 's' %> since your last essay.
+      Essays unlock after <%= status.essayAllowedAfterPhotos %> short posts, and after <%= status.essayRequiredAfterPhotos %> short posts your next post must be an essay.
     </p>
 
     <% if (status.canPhoto && status.canEssay) { %>
@@ -43,7 +47,7 @@
         </div>
         <input type="hidden" name="cropX"><input type="hidden" name="cropY"><input type="hidden" name="cropSize">
         <textarea name="caption" maxlength="<%= limits.caption %>" rows="3"
-                  placeholder="Say something (<%= limits.caption %> characters max) — with a photo it's the caption, without one it stands alone" data-count="cap-count"></textarea>
+                  placeholder="Say something (<%= limits.caption %> characters max)" data-count="cap-count"></textarea>
         <div class="charcount"><span id="cap-count">0</span>/<%= limits.caption %></div>
         <button class="primary">Post</button>
       </form>

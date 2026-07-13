@@ -3,9 +3,9 @@
   <% if (!status.postedToday) { %>
     <div class="compose-nudge">
       <% if (status.canPhoto) { %>
-        <a href="/new">You haven't posted today — share something</a>
+        <a href="/new">You haven't posted yet today</a>
       <% } else { %>
-        <a href="/new">You haven't posted today — essay time (<%= status.photosSinceEssay %> short posts since your last)</a>
+        <a href="/new">You haven't posted yet today — essay time</a>
       <% } %>
     </div>
   <% } %>
