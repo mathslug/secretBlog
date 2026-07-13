@@ -37,7 +37,6 @@
         <input type="hidden" name="type" value="photo">
         <label class="file-label">
           <input type="file" name="photo" id="photo-input" accept="image/*">
-          <span class="hint">(optional)</span>
         </label>
         <div id="crop-wrap" class="hidden">
           <div id="crop-stage"><img id="crop-img" alt="" draggable="false"></div>
@@ -48,7 +47,7 @@
         </div>
         <input type="hidden" name="cropX"><input type="hidden" name="cropY"><input type="hidden" name="cropSize">
         <textarea name="caption" maxlength="<%= limits.caption %>" rows="3"
-                  placeholder="Say something (optional)" data-count="cap-count"></textarea>
+                  placeholder="Say something (<%= limits.caption %> characters max)" data-count="cap-count"></textarea>
         <div class="charcount"><span id="cap-count">0</span>/<%= limits.caption %></div>
         <button class="primary">Post</button>
       </form>
