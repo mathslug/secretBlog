@@ -250,3 +250,28 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 
 .profile-head { text-align: center; margin: 0.75rem 0 1.25rem; }
 .profile-head h1 { font-size: 1.4rem; }
+
+/* Composer: skip today's post */
+.skip-form { text-align: center; margin-top: 1.5rem; }
+.skip-form button { color: var(--muted); font-size: 0.9rem; }
+
+/* Pull-to-refresh snail (standalone PWA only; element created by app.js) */
+#ptr {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, 0);
+  z-index: 300;
+  font-size: 1.75rem;
+  opacity: 0;
+  pointer-events: none;
+}
+#ptr.refreshing {
+  opacity: 1;
+  transform: translate(-50%, 80px);
+  animation: ptr-spin 0.9s linear infinite;
+}
+@keyframes ptr-spin {
+  from { transform: translate(-50%, 80px) rotate(0deg); }
+  to { transform: translate(-50%, 80px) rotate(360deg); }
+}

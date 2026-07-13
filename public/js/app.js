@@ -64,6 +64,70 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
 }
 
+// Pull-to-refresh for the installed app. Browsers have their own; standalone
+// PWAs (notably on iOS) don't, so pulling down from the top reloads the page.
+(function () {
+  var standalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+  if (!standalone) return;
+
+  var THRESHOLD = 70;
+  var startY = null;
+  var snail = null;
+
+  function getSnail() {
+    if (!snail) {
+      snail = document.createElement('div');
+      snail.id = 'ptr';
+      snail.textContent = '🐌';
+      document.body.appendChild(snail);
+    }
+    return snail;
+  }
+
+  function reset() {
+    startY = null;
+    if (snail) {
+      snail.classList.remove('ready');
+      snail.style.opacity = '';
+      snail.style.transform = '';
+    }
+  }
+
+  document.addEventListener('touchstart', function (e) {
+    var top = (document.scrollingElement || document.documentElement).scrollTop;
+    startY = top <= 0 && e.touches.length === 1
+      && !e.target.closest('#crop-stage, textarea, input')
+      ? e.touches[0].clientY : null;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function (e) {
+    if (startY === null) return;
+    var pull = (e.touches[0].clientY - startY) / 2.5;
+    if (pull <= 0) { reset(); return; }
+    var el = getSnail();
+    var ready = pull >= THRESHOLD;
+    el.style.opacity = Math.min(pull / THRESHOLD, 1);
+    el.style.transform = 'translate(-50%, ' + Math.min(pull, THRESHOLD + 20) + 'px)'
+      + (ready ? ' scale(1.3)' : '');
+    el.classList.toggle('ready', ready);
+  }, { passive: true });
+
+  document.addEventListener('touchend', function () {
+    if (snail && snail.classList.contains('ready')) {
+      snail.classList.remove('ready');
+      snail.classList.add('refreshing');
+      snail.style.opacity = '';
+      snail.style.transform = '';
+      location.reload();
+    } else {
+      reset();
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchcancel', reset, { passive: true });
+})();
+
 // Home-screen install nudge (rendered on /new once you've posted today).
 // Chromium fires beforeinstallprompt, letting a button trigger the real
 // install dialog; iOS has no API, so it gets Share-menu instructions.

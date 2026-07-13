@@ -31,7 +31,7 @@ router.get('/', requireAuth, (req, res) => {
   const posts = db.prepare(
     `SELECT p.*, u.username, u.display_name FROM posts p
      JOIN users u ON u.id = p.user_id
-     WHERE p.user_id IN (${placeholders}) AND p.id < ?
+     WHERE p.user_id IN (${placeholders}) AND p.skipped = 0 AND p.id < ?
      ORDER BY p.id DESC LIMIT 21`
   ).all(...ids, before);
   const hasMore = posts.length > 20;
@@ -153,10 +153,27 @@ router.post('/posts', requireAuth, upload.single('photo'), async (req, res, next
   }
 });
 
+// Skipping burns the day: a hidden posts row means the one-per-day rule and
+// the essay cadence advance exactly as if you had posted. On an essay-only
+// day the skip counts as the essay.
+router.post('/posts/skip', requireAuth, (req, res) => {
+  const status = postingStatus(req.user.id);
+  if (!status.postedToday) {
+    const type = status.canPhoto ? 'photo' : 'essay';
+    try {
+      db.prepare('INSERT INTO posts (user_id, type, day, skipped) VALUES (?, ?, ?, 1)')
+        .run(req.user.id, type, todayStr());
+    } catch (e) {
+      if (!isConstraintError(e)) throw e;
+    }
+  }
+  res.redirect('/new');
+});
+
 router.get('/post/:id', requireAuth, (req, res) => {
   const post = db.prepare(
     `SELECT p.*, u.username, u.display_name FROM posts p
-     JOIN users u ON u.id = p.user_id WHERE p.id = ?`
+     JOIN users u ON u.id = p.user_id WHERE p.id = ? AND p.skipped = 0`
   ).get(req.params.id);
   if (!post || !canViewPost(post, req.user.id)) {
     return res.status(404).render('error', { title: 'Not found', message: 'Post not found.' });
@@ -173,7 +190,7 @@ router.get('/post/:id', requireAuth, (req, res) => {
 });
 
 router.post('/post/:id/comments', requireAuth, (req, res) => {
-  const post = db.prepare('SELECT * FROM posts WHERE id = ?').get(req.params.id);
+  const post = db.prepare('SELECT * FROM posts WHERE id = ? AND skipped = 0').get(req.params.id);
   if (!post || !canViewPost(post, req.user.id)) return res.status(404).send('Not found');
   const body = String(req.body.body || '').trim();
   if (!body || body.length > config.limits.comment) {
@@ -185,7 +202,7 @@ router.post('/post/:id/comments', requireAuth, (req, res) => {
 });
 
 router.post('/post/:id/delete', requireAuth, (req, res) => {
-  const post = db.prepare('SELECT * FROM posts WHERE id = ? AND user_id = ?')
+  const post = db.prepare('SELECT * FROM posts WHERE id = ? AND user_id = ? AND skipped = 0')
     .get(req.params.id, req.user.id);
   if (!post) return res.status(404).send('Not found');
   db.prepare('DELETE FROM posts WHERE id = ?').run(post.id);
@@ -218,7 +235,7 @@ router.get('/u/:username', requireAuth, (req, res) => {
   const posts = db.prepare(
     `SELECT p.*, u.username, u.display_name FROM posts p
      JOIN users u ON u.id = p.user_id
-     WHERE p.user_id = ? ORDER BY p.id DESC LIMIT 100`
+     WHERE p.user_id = ? AND p.skipped = 0 ORDER BY p.id DESC LIMIT 100`
   ).all(person.id);
   attachComments(posts);
   res.render('profile', {

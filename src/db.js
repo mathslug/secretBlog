@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS posts (
   caption TEXT,
   body TEXT,
   image TEXT,
+  skipped INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (user_id, day)
 );
@@ -65,6 +66,11 @@ CREATE INDEX IF NOT EXISTS idx_posts_user ON posts(user_id, id);
 CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id, id);
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 `);
+
+// Migrations for databases created before a column existed.
+if (!db.prepare("SELECT COUNT(*) AS c FROM pragma_table_info('posts') WHERE name = 'skipped'").get().c) {
+  db.exec('ALTER TABLE posts ADD COLUMN skipped INTEGER NOT NULL DEFAULT 0');
+}
 
 // node:sqlite has no transaction helper; wrap manually.
 function transaction(fn) {

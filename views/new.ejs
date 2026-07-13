@@ -5,7 +5,7 @@
 
   <% if (status.postedToday) { %>
     <div class="empty">
-      <p>You already posted today. 🐌</p>
+      <p><%= status.skippedToday ? 'You skipped today.' : 'You already posted today.' %> 🐌</p>
       <p>Come back tomorrow.</p>
     </div>
     <div id="install-nudge" class="install-nudge hidden">
@@ -16,7 +16,7 @@
     </div>
   <% } else { %>
     <p class="rule-note">
-      Whorl encourages both short and long-form communication. On most days, you can
+      Whorl is for both short and long-form communication. On most days, you can
       post a picture and/or quip. Sometimes, you can post a longer piece.
     </p>
     <p class="rule-note">
@@ -62,6 +62,11 @@
         <button class="primary">Post essay</button>
       </form>
     <% } %>
+
+    <form method="post" action="/posts/skip" class="skip-form"
+          onsubmit="return confirm('Skip today&#39;s post? You won&#39;t be able to post anything else today.')">
+      <button type="submit" class="linklike">Skip today's post</button>
+    </form>
   <% } %>
 </div>
 <%- include('partials/footer') %>

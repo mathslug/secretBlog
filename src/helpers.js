@@ -31,10 +31,13 @@ function canViewPost(post, userId) {
 // - one post per day (also enforced by a UNIQUE constraint)
 // - a photo is allowed while you have fewer than 4 photos since your last essay
 // - an essay is allowed once you have at least 2 photos since your last essay
+// Skips are hidden rows in posts, so they burn the day and advance the
+// cadence without any extra logic here.
 function postingStatus(userId) {
   const { essayAllowedAfterPhotos, essayRequiredAfterPhotos } = config.limits;
-  const postedToday = !!db.prepare('SELECT 1 FROM posts WHERE user_id = ? AND day = ?')
+  const today = db.prepare('SELECT skipped FROM posts WHERE user_id = ? AND day = ?')
     .get(userId, todayStr());
+  const postedToday = !!today;
   const lastEssay = db.prepare(
     `SELECT id FROM posts WHERE user_id = ? AND type = 'essay' ORDER BY id DESC LIMIT 1`
   ).get(userId);
@@ -43,6 +46,7 @@ function postingStatus(userId) {
   ).get(userId, lastEssay ? lastEssay.id : 0).c;
   return {
     postedToday,
+    skippedToday: !!(today && today.skipped),
     photosSinceEssay,
     canPhoto: !postedToday && photosSinceEssay < essayRequiredAfterPhotos,
     canEssay: !postedToday && photosSinceEssay >= essayAllowedAfterPhotos,
