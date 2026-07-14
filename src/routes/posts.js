@@ -154,12 +154,15 @@ router.post('/posts', requireAuth, upload.single('photo'), async (req, res, next
 });
 
 // Skipping burns the day: a hidden posts row means the one-per-day rule and
-// the essay cadence advance exactly as if you had posted. On an essay-only
-// day the skip counts as the essay.
+// the essay cadence advance exactly as if you had posted. The skip counts as
+// the type you were about to post — the active composer tab when both are
+// allowed — clamped to what today's rules permit.
 router.post('/posts/skip', requireAuth, (req, res) => {
   const status = postingStatus(req.user.id);
   if (!status.postedToday) {
-    const type = status.canPhoto ? 'photo' : 'essay';
+    let type = req.body.type === 'essay' ? 'essay' : 'photo';
+    if (!status.canEssay) type = 'photo';
+    if (!status.canPhoto) type = 'essay';
     try {
       db.prepare('INSERT INTO posts (user_id, type, day, skipped) VALUES (?, ?, ?, 1)')
         .run(req.user.id, type, todayStr());

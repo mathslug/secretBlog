@@ -65,6 +65,7 @@
 
     <form method="post" action="/posts/skip" class="skip-form"
           onsubmit="return confirm('Skip today&#39;s post? You won&#39;t be able to post anything else today.')">
+      <input type="hidden" name="type" id="skip-type" value="<%= status.canPhoto ? 'photo' : 'essay' %>">
       <button type="submit" class="linklike">Skip today's post</button>
     </form>
   <% } %>

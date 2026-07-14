@@ -20,9 +20,10 @@ still `slugclub` — only the public branding is Whorl.
 - **Essay cadence**: essays unlock after **2** short posts since your last
   essay, and after **4** short posts your next post *must* be an essay.
 - **Skipping**: you can skip a day instead of posting. A skip burns the day
-  (nothing else can be posted) and advances the cadence — it counts as a
-  short post, or as the essay on an essay-only day. Skips are stored as
-  hidden rows in `posts` (`skipped = 1`) and never appear anywhere.
+  (nothing else can be posted) and advances the cadence — it counts as
+  whichever type you were about to post (the active composer tab, when both
+  are allowed). Skips are stored as hidden rows in `posts` (`skipped = 1`)
+  and never appear anywhere.
 - **Comments** up to **128** characters. The first two show; the rest expand.
 - Signup requires the invite code. Feeds show you + your friends only.
 - New members automatically start out friends with `mathslug`

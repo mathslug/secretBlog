@@ -32,6 +32,8 @@ document.addEventListener('click', function (e) {
     var essayForm = document.getElementById('essay-form');
     if (photoForm) photoForm.classList.toggle('hidden', tab.dataset.tab !== 'photo');
     if (essayForm) essayForm.classList.toggle('hidden', tab.dataset.tab !== 'essay');
+    var skipType = document.getElementById('skip-type');
+    if (skipType) skipType.value = tab.dataset.tab === 'essay' ? 'essay' : 'photo';
   }
 });
 
