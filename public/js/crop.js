@@ -35,11 +35,20 @@
     writeCrop();
   }
 
-  function writeCrop() {
+  function cropRect() {
     var s = scale();
-    form.elements.cropX.value = Math.round(-ox / s);
-    form.elements.cropY.value = Math.round(-oy / s);
-    form.elements.cropSize.value = Math.round(stageSize() / s);
+    return {
+      x: Math.round(-ox / s),
+      y: Math.round(-oy / s),
+      size: Math.round(stageSize() / s)
+    };
+  }
+
+  function writeCrop() {
+    var r = cropRect();
+    form.elements.cropX.value = r.x;
+    form.elements.cropY.value = r.y;
+    form.elements.cropSize.value = r.size;
   }
 
   function center() {
@@ -53,6 +62,7 @@
   input.addEventListener('change', function () {
     var file = input.files && input.files[0];
     if (!file) return;
+    processed = false;
     if (objectUrl) URL.revokeObjectURL(objectUrl);
     objectUrl = URL.createObjectURL(file);
     img.onload = function () {
@@ -120,7 +130,68 @@
   stage.addEventListener('pointerup', function () { dragging = false; });
   stage.addEventListener('pointercancel', function () { dragging = false; });
 
-  form.addEventListener('submit', function () {
-    if (nw) writeCrop();
+  // On submit, render the chosen square to a canvas and upload that instead
+  // of the original file: a ~1080px JPEG is 20-30x smaller than a 12MP
+  // photo, which on a slow connection is the difference between posting in
+  // a second and hanging (or being killed) mid-upload. If anything in this
+  // path fails, the original file plus crop coordinates go up unchanged and
+  // the server crops and resizes exactly as before. Canvas re-encoding
+  // bakes in the EXIF orientation, matching how the coordinates were chosen.
+  var processed = false;
+
+  // Halve in steps before the final draw; a single large downscale
+  // aliases badly in some browsers.
+  function renderCrop(r, out) {
+    var src = img, sx = r.x, sy = r.y, s = r.size;
+    while (s > out * 2) {
+      var half = Math.round(s / 2);
+      var c = document.createElement('canvas');
+      c.width = c.height = half;
+      var ctx = c.getContext('2d');
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(src, sx, sy, s, s, 0, 0, half, half);
+      src = c; sx = 0; sy = 0; s = half;
+    }
+    var final = document.createElement('canvas');
+    final.width = final.height = out;
+    var fctx = final.getContext('2d');
+    fctx.imageSmoothingQuality = 'high';
+    fctx.drawImage(src, sx, sy, s, s, 0, 0, out, out);
+    return final;
+  }
+
+  form.addEventListener('submit', function (e) {
+    if (processed) return; // second pass: upload whatever is in the input now
+    var file = input.files && input.files[0];
+    if (!nw || !file) return;
+    writeCrop();
+    if (typeof DataTransfer === 'undefined' || !form.requestSubmit) return;
+    e.preventDefault();
+
+    function resubmit() {
+      processed = true;
+      form.requestSubmit();
+    }
+
+    try {
+      var r = cropRect();
+      var out = Math.min(Number(form.dataset.imageSize) || 1080, r.size);
+      renderCrop(r, out).toBlob(function (blob) {
+        try {
+          if (blob && blob.size < file.size) {
+            var dt = new DataTransfer();
+            dt.items.add(new File([blob], 'photo.jpg', { type: 'image/jpeg' }));
+            input.files = dt.files;
+            // The upload now IS the chosen square.
+            form.elements.cropX.value = '0';
+            form.elements.cropY.value = '0';
+            form.elements.cropSize.value = String(out);
+          }
+        } catch (err) { /* keep the original file */ }
+        resubmit();
+      }, 'image/jpeg', 0.85);
+    } catch (err) {
+      resubmit();
+    }
   });
 })();

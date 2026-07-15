@@ -72,7 +72,9 @@ async function processPhoto(buffer, crop) {
   let size = Math.min(w, h);
   let left = Math.floor((w - size) / 2);
   let top = Math.floor((h - size) / 2);
-  if (crop && [crop.x, crop.y, crop.size].every(Number.isFinite)) {
+  // Note: Number('') is 0, so blank fields (no client crop) land here as
+  // zeros — the size >= 1 guard sends them to the center-crop default.
+  if (crop && [crop.x, crop.y, crop.size].every(Number.isFinite) && crop.size >= 1) {
     size = Math.round(Math.max(1, Math.min(crop.size, w, h)));
     left = Math.round(Math.min(Math.max(crop.x, 0), w - size));
     top = Math.round(Math.min(Math.max(crop.y, 0), h - size));

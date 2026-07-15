@@ -1,7 +1,7 @@
 // Conservative service worker: HTML is never cached (the feed is dynamic and
 // auth-gated), static assets are stale-while-revalidate, and photos — which
 // are immutable and randomly named — are cache-first with a size cap.
-const VERSION = 'v3';
+const VERSION = 'v4';
 const STATIC_CACHE = `static-${VERSION}`;
 const IMG_CACHE = 'images-v1';
 const MAX_IMAGES = 300;

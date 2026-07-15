@@ -33,7 +33,7 @@
 
     <% if (status.canPhoto) { %>
       <form method="post" action="/posts" enctype="multipart/form-data" id="photo-form"
-            class="<%= status.canEssay && status.canPhoto ? '' : '' %>">
+            data-image-size="<%= limits.imageSize %>">
         <input type="hidden" name="type" value="photo">
         <label class="file-label">
           <input type="file" name="photo" id="photo-input" accept="image/*">
