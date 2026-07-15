@@ -66,6 +66,67 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
 }
 
+// Posting feedback. Submitting a post is a full-page navigation that uploads
+// the original photo, which on a slow connection can take a long time with
+// nothing on screen changing — so show a spinning snail and disable the
+// button until the server responds. Duplicate submits are also rejected
+// server-side (one post per day), so re-enabling after a stall is safe.
+(function () {
+  var timer = null;
+
+  function reset() {
+    clearTimeout(timer);
+    timer = null;
+    var el = document.getElementById('posting');
+    if (el) el.remove();
+    document.querySelectorAll('form[data-busy]').forEach(function (f) {
+      delete f.dataset.busy;
+      var btn = f.querySelector('button.primary');
+      if (btn) {
+        btn.disabled = false;
+        if (btn.dataset.label) btn.textContent = btn.dataset.label;
+      }
+    });
+  }
+
+  document.addEventListener('submit', function (e) {
+    var form = e.target;
+    if (e.defaultPrevented || !/^(photo|essay)-form$/.test(form.id)) return;
+    if (form.dataset.busy) { e.preventDefault(); return; }
+    form.dataset.busy = '1';
+
+    var btn = form.querySelector('button.primary');
+    if (btn) {
+      btn.dataset.label = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Posting…';
+    }
+
+    var hasPhoto = form.elements.photo && form.elements.photo.files.length > 0;
+    var el = document.createElement('div');
+    el.id = 'posting';
+    el.innerHTML = '<div class="snail">🐌</div><p></p>';
+    el.querySelector('p').textContent = hasPhoto
+      ? 'Posting… photos can take a while on a slow connection.'
+      : 'Posting…';
+    document.body.appendChild(el);
+
+    // If nothing has happened after 75s the upload has probably stalled;
+    // give the button back so the user can retry.
+    timer = setTimeout(function () {
+      reset();
+      var note = document.createElement('p');
+      note.className = 'flash error';
+      note.textContent = 'This is taking a while — check your connection and try Post again.';
+      form.insertBefore(note, form.firstChild);
+    }, 75000);
+  });
+
+  // Navigating back restores this page from the back/forward cache with the
+  // busy state still set; pageshow fires on those restores where load doesn't.
+  window.addEventListener('pageshow', reset);
+})();
+
 // Pull-to-refresh for the installed app. Browsers have their own; standalone
 // PWAs (notably on iOS) don't, so pulling down from the top reloads the page.
 (function () {
