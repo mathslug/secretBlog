@@ -72,6 +72,14 @@ if (!db.prepare("SELECT COUNT(*) AS c FROM pragma_table_info('posts') WHERE name
   db.exec('ALTER TABLE posts ADD COLUMN skipped INTEGER NOT NULL DEFAULT 0');
 }
 
+// One-time rename, applied on deploy (safe to delete once it has run).
+// The NOT EXISTS guard keeps a boot from ever hitting the UNIQUE constraint.
+db.prepare(`
+  UPDATE users SET username = 'zootrider', display_name = 'zootrider'
+  WHERE username = 'juliagbentley5'
+    AND NOT EXISTS (SELECT 1 FROM users WHERE username = 'zootrider')
+`).run();
+
 // node:sqlite has no transaction helper; wrap manually.
 function transaction(fn) {
   return (...args) => {
