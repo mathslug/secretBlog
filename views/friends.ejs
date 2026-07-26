@@ -41,8 +41,7 @@
 
   <h2>Your friends (<%= friends.length %>)</h2>
   <% if (friends.length === 0) { %>
-    <p class="empty-inline">No friends yet. Ask your friends for their usernames
-    and add them above.</p>
+    <p class="empty-inline">Ask your friends for their usernames and add them above.</p>
   <% } %>
   <% friends.forEach(function (f) { %>
     <div class="friend-row">
