@@ -5,7 +5,8 @@
   <% if (notice) { %><p class="flash ok"><%= notice %></p><% } %>
 
   <form method="post" action="/friends/request" class="friend-add">
-    <input name="username" id="friend-filter" placeholder="Find people" autocomplete="off" required>
+    <input name="username" placeholder="Add a friend by username"
+           autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" required>
     <button>Send request</button>
   </form>
 
@@ -39,7 +40,10 @@
   <% } %>
 
   <h2>Your friends (<%= friends.length %>)</h2>
-  <% if (friends.length === 0) { %><p class="empty-inline">no friends :( ask people for their usernames</p><% } %>
+  <% if (friends.length === 0) { %>
+    <p class="empty-inline">No friends yet. Ask your friends for their usernames
+    and add them above — there's no list of people to browse.</p>
+  <% } %>
   <% friends.forEach(function (f) { %>
     <div class="friend-row">
       <a href="/u/<%= f.username %>"><strong><%= f.display_name %></strong> <span class="handle">@<%= f.username %></span></a>
@@ -50,30 +54,5 @@
     </div>
   <% }) %>
 
-  <h2>Everyone</h2>
-  <% if (directory.length === 0) { %><p class="empty-inline">nobody else has joined yet</p><% } %>
-  <div id="directory">
-    <% directory.forEach(function (p) { %>
-      <div class="friend-row" data-username="<%= p.username %>">
-        <% if (p.isFriend) { %>
-          <a href="/u/<%= p.username %>"><strong><%= p.username %></strong></a>
-          <span class="handle">friends</span>
-        <% } else { %>
-          <span><strong><%= p.username %></strong></span>
-          <% if (p.incomingId) { %>
-            <form method="post" action="/friends/accept" class="inline-form">
-              <input type="hidden" name="request_id" value="<%= p.incomingId %>"><button>Accept</button>
-            </form>
-          <% } else if (p.requested) { %>
-            <span class="handle">requested</span>
-          <% } else { %>
-            <form method="post" action="/friends/request" class="inline-form">
-              <input type="hidden" name="username" value="<%= p.username %>"><button>Add</button>
-            </form>
-          <% } %>
-        <% } %>
-      </div>
-    <% }) %>
-  </div>
 </div>
 <%- include('partials/footer') %>

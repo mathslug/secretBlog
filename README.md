@@ -28,9 +28,10 @@ still `slugclub` — only the public branding is Whorl.
 - Signup is open to anyone: username + password, no invite code. Usernames are
   stored lowercase, so capitals typed at signup or login are folded down.
   Feeds show you + your friends only.
-- New members automatically start out friends with `mathslug`
-  (`AUTO_FRIEND_USERNAME`) so the feed isn't empty on day one; that
-  friendship can be removed like any other.
+- New accounts start with no friends and an empty feed. There is no directory
+  of members: you only see the usernames of your friends and of people in a
+  pending request with you, so adding someone means knowing their username
+  already.
 
 ## Stack
 

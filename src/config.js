@@ -6,9 +6,6 @@ module.exports = {
   domain: process.env.DOMAIN || 'localhost:3000',
   // Calendar used for the one-post-per-day rule.
   tz: process.env.APP_TZ || 'America/New_York',
-  // New members are automatically friended with this user (if the account
-  // exists); they're free to remove the friendship afterwards.
-  autoFriend: process.env.AUTO_FRIEND_USERNAME || 'mathslug',
   isProd: process.env.NODE_ENV === 'production',
   limits: {
     caption: 256,
