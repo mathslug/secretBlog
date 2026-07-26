@@ -25,7 +25,9 @@ still `slugclub` — only the public branding is Whorl.
   are allowed). Skips are stored as hidden rows in `posts` (`skipped = 1`)
   and never appear anywhere.
 - **Comments** up to **128** characters. The first two show; the rest expand.
-- Signup requires the invite code. Feeds show you + your friends only.
+- Signup is open to anyone: username + password, no invite code. Usernames are
+  stored lowercase, so capitals typed at signup or login are folded down.
+  Feeds show you + your friends only.
 - New members automatically start out friends with `mathslug`
   (`AUTO_FRIEND_USERNAME`) so the feed isn't empty on day one; that
   friendship can be removed like any other.
@@ -42,7 +44,7 @@ behind a native Caddy install (automatic HTTPS). No Docker. State lives in
 ```sh
 npm install
 npm run dev            # http://localhost:3000, data in ./data
-# env: PORT, DATA_DIR, INVITE_CODE (default "letmein"), APP_TZ, DOMAIN
+# env: PORT, DATA_DIR, APP_TZ, DOMAIN
 ```
 
 ## Deployment — no manual server steps
@@ -59,8 +61,7 @@ Every push to `main` runs `.github/workflows/deploy.yml`:
 3. Health-check the service; the run fails loudly if it isn't healthy.
 
 Configuration lives in GitHub Actions **secrets** (`DEPLOY_HOST`,
-`DEPLOY_SSH_KEY`, `INVITE_CODE`) and **variables** (`DOMAIN`, `OLD_DOMAIN`,
-`APP_TZ`). `OLD_DOMAIN` (optional) gets a permanent redirect to `DOMAIN`.
+`DEPLOY_SSH_KEY`) and **variables** (`DOMAIN`, `OLD_DOMAIN`, `APP_TZ`). `OLD_DOMAIN` (optional) gets a permanent redirect to `DOMAIN`.
 To change the domain later: update the variables, add the new DNS record,
 re-run the workflow.
 

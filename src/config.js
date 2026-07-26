@@ -3,7 +3,6 @@ const path = require('path');
 module.exports = {
   port: Number(process.env.PORT) || 3000,
   dataDir: process.env.DATA_DIR || path.join(__dirname, '..', 'data'),
-  inviteCode: process.env.INVITE_CODE || 'letmein',
   domain: process.env.DOMAIN || 'localhost:3000',
   // Calendar used for the one-post-per-day rule.
   tz: process.env.APP_TZ || 'America/New_York',
