@@ -33,7 +33,10 @@ Environment=DATA_DIR=/data
 # the memory cgroup controller, which on Raspberry Pi OS means
 # cgroup_enable=memory in /boot/firmware/cmdline.txt (the firmware injects
 # cgroup_disable=memory by default).
-Memory=512M
+#
+# Passed through rather than set as a Quadlet key: podman 5.4's Quadlet has no
+# `Memory=` key in [Container] and refuses to generate the unit if given one.
+PodmanArgs=--memory=512m
 
 # node:24 has global fetch, so this needs nothing added to the image.
 HealthCmd=node -e "fetch('http://127.0.0.1:3000/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
