@@ -1,0 +1,49 @@
+# Quadlet unit for whorl (rootless podman + systemd).
+#
+# Installed to ~/.config/containers/systemd/whorl.container on the host.
+# systemd's podman-user-generator turns this into whorl.service at boot;
+# there is no `podman generate systemd` step and no unit to regenerate when
+# this file changes — `systemctl --user daemon-reload` is enough.
+#
+# Requires `loginctl enable-linger <user>` so it starts at boot without a login.
+
+[Unit]
+Description=whorl — one photo a day, friends only
+Documentation=https://github.com/mathslug/secretBlog
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+ContainerName=whorl
+Image=localhost/whorl:latest
+
+# Loopback only. The public path is the Cloudflare tunnel, which reaches this
+# from the same host, so there is no reason to expose it on the LAN.
+PublishPort=127.0.0.1:3000:3000
+
+# %h is the owning user's home directory.
+Volume=%h/data/whorl:/data
+
+EnvironmentFile=%h/.config/whorl.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=DATA_DIR=/data
+
+# The Pi has 8GB; this is a blast-radius cap, not a tuning parameter. Requires
+# the memory cgroup controller, which on Raspberry Pi OS means
+# cgroup_enable=memory in /boot/firmware/cmdline.txt (the firmware injects
+# cgroup_disable=memory by default).
+Memory=512M
+
+# node:24 has global fetch, so this needs nothing added to the image.
+HealthCmd=node -e "fetch('http://127.0.0.1:3000/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+HealthInterval=30s
+HealthRetries=3
+HealthStartPeriod=15s
+
+[Service]
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
