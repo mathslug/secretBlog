@@ -1,8 +1,13 @@
 name: deploy
 
+# Manual only. whorl now runs on a Raspberry Pi, deployed by pulling this repo
+# on the Pi itself (see the rpi repo's deploy-app.sh). This workflow still
+# targets the DigitalOcean droplet, so leaving it on `push` would deploy every
+# merge to a host that serves no traffic.
+#
+# Kept rather than deleted so the droplet stays a working fallback until it is
+# decommissioned.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:

@@ -1,0 +1,13 @@
+# Keep the build context small and reproducible.
+# node_modules especially: it must be installed inside the image for the
+# target architecture, never copied in from a developer machine.
+node_modules/
+data/
+.git/
+.github/
+deploy/
+infra/
+scripts/
+*.log
+.DS_Store
+.env
