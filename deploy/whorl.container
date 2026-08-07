@@ -38,8 +38,12 @@ Environment=DATA_DIR=/data
 # `Memory=` key in [Container] and refuses to generate the unit if given one.
 PodmanArgs=--memory=512m
 
-# node:24 has global fetch, so this needs nothing added to the image.
-HealthCmd=node -e "fetch('http://127.0.0.1:3000/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+# A script rather than an inline `node -e "…"`: Quadlet's parser does not
+# survive nested quotes and silently truncates the command at the first inner
+# quote, leaving the container permanently "unhealthy" with a shell syntax
+# error while the app is fine. Verify with `podman inspect --format
+# '{{.Config.Healthcheck.Test}}'` after any change here.
+HealthCmd=node /app/healthcheck.js
 HealthInterval=30s
 HealthRetries=3
 HealthStartPeriod=15s
