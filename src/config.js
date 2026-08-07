@@ -3,13 +3,9 @@ const path = require('path');
 module.exports = {
   port: Number(process.env.PORT) || 3000,
   dataDir: process.env.DATA_DIR || path.join(__dirname, '..', 'data'),
-  inviteCode: process.env.INVITE_CODE || 'letmein',
   domain: process.env.DOMAIN || 'localhost:3000',
   // Calendar used for the one-post-per-day rule.
   tz: process.env.APP_TZ || 'America/New_York',
-  // New members are automatically friended with this user (if the account
-  // exists); they're free to remove the friendship afterwards.
-  autoFriend: process.env.AUTO_FRIEND_USERNAME || 'mathslug',
   isProd: process.env.NODE_ENV === 'production',
   limits: {
     caption: 256,

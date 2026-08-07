@@ -4,8 +4,7 @@
   <p class="tagline">special secret blog for secret friends</p>
   <% if (error) { %><p class="flash error"><%= error %></p><% } %>
   <form method="post" action="/signup">
-    <label>Invite code <input name="invite" required></label>
-    <label>Username <input name="username" pattern="[a-z0-9_]{3,20}" title="3–20 characters: lowercase letters, digits, underscores" autocomplete="username" required></label>
+    <label>Username <input name="username" pattern="[A-Za-z0-9_]{3,20}" title="3–20 characters: letters, digits, underscores" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></label>
     <label>Password <input name="password" type="password" minlength="8" autocomplete="new-password" required></label>
     <button>Join</button>
   </form>

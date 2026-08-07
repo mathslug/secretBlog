@@ -9,7 +9,7 @@
       <p>Come back tomorrow.</p>
     </div>
     <div id="install-nudge" class="install-nudge hidden">
-      <p class="install-title">While you wait: put Whorl on your home screen</p>
+      <p class="install-title">While you wait: put Whorl on your phone’s home screen</p>
       <button type="button" id="install-btn" class="hidden">Add to home screen</button>
       <p id="install-ios" class="hint hidden">Open this site in Safari, tap the Share button (the square with the up arrow), then choose “Add to Home Screen”.</p>
       <p id="install-generic" class="hint hidden">Open your browser’s menu and choose “Add to Home Screen” (sometimes called “Install app”).</p>
@@ -33,7 +33,7 @@
 
     <% if (status.canPhoto) { %>
       <form method="post" action="/posts" enctype="multipart/form-data" id="photo-form"
-            class="<%= status.canEssay && status.canPhoto ? '' : '' %>">
+            data-image-size="<%= limits.imageSize %>">
         <input type="hidden" name="type" value="photo">
         <label class="file-label">
           <input type="file" name="photo" id="photo-input" accept="image/*">

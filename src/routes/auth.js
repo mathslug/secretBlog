@@ -1,10 +1,8 @@
 const express = require('express');
 const { db, isConstraintError } = require('../db');
-const config = require('../config');
 const {
   hashPassword,
   verifyPassword,
-  safeEqual,
   createSession,
   destroySession,
   setSessionCookie,
@@ -38,13 +36,12 @@ router.get('/signup', (req, res) => {
 
 router.post('/signup', rateLimit, (req, res) => {
   const fail = (msg) => res.redirect('/signup?err=' + encodeURIComponent(msg));
-  const invite = String(req.body.invite || '');
+  // Usernames are stored and matched lowercase; typing capitals is fine.
   const username = String(req.body.username || '').trim().toLowerCase();
   const password = String(req.body.password || '');
 
-  if (!safeEqual(invite, config.inviteCode)) return fail('Wrong invite code.');
   if (!/^[a-z0-9_]{3,20}$/.test(username)) {
-    return fail('Username must be 3–20 characters: lowercase letters, digits, underscores.');
+    return fail('Username must be 3–20 characters: letters, digits, underscores.');
   }
   if (password.length < 8) return fail('Password must be at least 8 characters.');
 
@@ -60,12 +57,6 @@ router.post('/signup', rateLimit, (req, res) => {
     throw e;
   }
   const newId = Number(info.lastInsertRowid);
-
-  const founder = db.prepare('SELECT id FROM users WHERE username = ?').get(config.autoFriend);
-  if (founder && founder.id !== newId) {
-    const [a, b] = founder.id < newId ? [founder.id, newId] : [newId, founder.id];
-    db.prepare('INSERT OR IGNORE INTO friendships (user_a, user_b) VALUES (?, ?)').run(a, b);
-  }
 
   setSessionCookie(res, createSession(newId));
   res.redirect('/friends');

@@ -71,7 +71,6 @@ CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 if (!db.prepare("SELECT COUNT(*) AS c FROM pragma_table_info('posts') WHERE name = 'skipped'").get().c) {
   db.exec('ALTER TABLE posts ADD COLUMN skipped INTEGER NOT NULL DEFAULT 0');
 }
-
 // node:sqlite has no transaction helper; wrap manually.
 function transaction(fn) {
   return (...args) => {

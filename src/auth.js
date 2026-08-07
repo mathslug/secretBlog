@@ -14,12 +14,6 @@ function verifyPassword(password, stored) {
   return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), check);
 }
 
-function safeEqual(a, b) {
-  const ha = crypto.createHash('sha256').update(String(a)).digest();
-  const hb = crypto.createHash('sha256').update(String(b)).digest();
-  return crypto.timingSafeEqual(ha, hb);
-}
-
 function createSession(userId) {
   const token = crypto.randomBytes(32).toString('hex');
   db.prepare(
@@ -106,7 +100,6 @@ function rateLimit(req, res, next) {
 module.exports = {
   hashPassword,
   verifyPassword,
-  safeEqual,
   createSession,
   destroySession,
   setSessionCookie,
