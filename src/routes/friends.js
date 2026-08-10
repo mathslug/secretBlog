@@ -18,20 +18,20 @@ router.get('/friends', requireAuth, (req, res) => {
      JOIN users u ON u.id = r.from_id WHERE r.to_id = ? ORDER BY r.id DESC`
   ).all(me);
   const outgoing = db.prepare(
-    `SELECT r.id, u.id AS user_id, u.username FROM friend_requests r
+    `SELECT u.id AS user_id, u.username FROM friend_requests r
      JOIN users u ON u.id = r.to_id WHERE r.from_id = ?`
   ).all(me);
   const unmatched = db.prepare(
-    'SELECT id, username FROM unmatched_requests WHERE from_id = ?'
+    'SELECT username FROM unmatched_requests WHERE from_id = ?'
   ).all(me);
 
-  // Real and unmatched requests are rendered from one list, by username only,
-  // so a sent request to a name nobody holds is indistinguishable from one to
-  // a private account that simply hasn't accepted.
-  const sent = [
-    ...outgoing.map((r) => ({ id: r.id, username: r.username, unmatched: false })),
-    ...unmatched.map((r) => ({ id: r.id, username: r.username, unmatched: true }))
-  ].sort((a, b) => a.username.localeCompare(b.username));
+  // Sent requests are rendered as usernames and nothing else — no row id, no
+  // hint of which table a name came from — so a request to a name nobody holds
+  // renders identically to one to a private account that hasn't accepted.
+  // Cancelling keys off the username for the same reason.
+  const sent = [...outgoing, ...unmatched]
+    .map((r) => r.username)
+    .sort((a, b) => a.localeCompare(b));
 
   // Search only ever matches accounts that opted in via the profile toggle.
   // Everyone else can be reached, but only by typing their username exactly.
@@ -143,13 +143,22 @@ router.post('/friends/accept', requireAuth, (req, res) => {
 });
 
 router.post('/friends/decline', requireAuth, (req, res) => {
-  if (req.body.unmatched === '1') {
-    db.prepare('DELETE FROM unmatched_requests WHERE id = ? AND from_id = ?')
-      .run(Number(req.body.request_id), req.user.id);
-  } else {
-    db.prepare('DELETE FROM friend_requests WHERE id = ? AND (to_id = ? OR from_id = ?)')
-      .run(Number(req.body.request_id), req.user.id, req.user.id);
-  }
+  db.prepare('DELETE FROM friend_requests WHERE id = ? AND (to_id = ? OR from_id = ?)')
+    .run(Number(req.body.request_id), req.user.id, req.user.id);
+  res.redirect('/friends');
+});
+
+// Cancels a request you sent, by username. Both deletes always run and are
+// scoped to you, so the server never has to be told — and the page never has
+// to reveal — whether the name belongs to a real account.
+router.post('/friends/cancel', requireAuth, (req, res) => {
+  const username = String(req.body.username || '').trim().toLowerCase().replace(/^@/, '');
+  db.prepare(
+    `DELETE FROM friend_requests
+     WHERE from_id = ? AND to_id = (SELECT id FROM users WHERE username = ?)`
+  ).run(req.user.id, username);
+  db.prepare('DELETE FROM unmatched_requests WHERE from_id = ? AND username = ?')
+    .run(req.user.id, username);
   res.redirect('/friends');
 });
 

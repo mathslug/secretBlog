@@ -66,12 +66,11 @@
   <% if (sent.length) { %>
     <h2>Sent requests</h2>
     <div id="sent-requests">
-    <% sent.forEach(function (r) { %>
+    <% sent.forEach(function (name) { %>
       <div class="friend-row">
-        <span><strong>@<%= r.username %></strong></span>
-        <form method="post" action="/friends/decline" class="inline-form">
-          <input type="hidden" name="request_id" value="<%= r.id %>">
-          <input type="hidden" name="unmatched" value="<%= r.unmatched ? '1' : '0' %>">
+        <span><strong>@<%= name %></strong></span>
+        <form method="post" action="/friends/cancel" class="inline-form">
+          <input type="hidden" name="username" value="<%= name %>">
           <button class="linklike">Cancel</button>
         </form>
       </div>
