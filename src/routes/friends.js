@@ -126,6 +126,14 @@ const acceptRequest = transaction((requestId, me) => {
   db.prepare('DELETE FROM friend_requests WHERE from_id = ? AND to_id = ?').run(me, r.from_id);
   const [a, b] = r.from_id < me ? [r.from_id, me] : [me, r.from_id];
   db.prepare('INSERT OR IGNORE INTO friendships (user_a, user_b) VALUES (?, ?)').run(a, b);
+  // Either side may have guessed the other's name before that account existed.
+  // Becoming friends settles those placeholders, which would otherwise sit in
+  // the sent list forever: re-sending stops early once you are already friends.
+  db.prepare(
+    `DELETE FROM unmatched_requests
+     WHERE (from_id = ? AND username = (SELECT username FROM users WHERE id = ?))
+        OR (from_id = ? AND username = (SELECT username FROM users WHERE id = ?))`
+  ).run(me, r.from_id, r.from_id, me);
   return true;
 });
 
