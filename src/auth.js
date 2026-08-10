@@ -8,10 +8,18 @@ function hashPassword(password) {
   return `${salt}:${hash}`;
 }
 
+// Anything malformed is a failed login, not an exception. timingSafeEqual
+// throws when the two buffers differ in length, and Buffer.from(undefined) throws
+// outright, so a truncated or corrupt row would have produced a 500 on the
+// login route instead of denying access.
 function verifyPassword(password, stored) {
+  if (typeof stored !== 'string') return false;
   const [salt, hash] = stored.split(':');
+  if (!salt || !hash) return false;
+  const expected = Buffer.from(hash, 'hex');
+  if (expected.length !== 64) return false;
   const check = crypto.scryptSync(password, salt, 64);
-  return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), check);
+  return crypto.timingSafeEqual(expected, check);
 }
 
 function createSession(userId) {
