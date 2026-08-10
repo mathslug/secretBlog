@@ -252,6 +252,18 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 
 .profile-head { text-align: center; margin: 0.75rem 0 1.25rem; }
 .profile-head h1 { font-size: 1.4rem; }
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
 
 /* Composer: skip today's post */
 .skip-form { text-align: center; margin-top: 1.5rem; }

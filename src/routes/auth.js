@@ -62,6 +62,12 @@ router.post('/signup', rateLimit, (req, res) => {
   res.redirect('/friends');
 });
 
+router.post('/settings/discoverable', requireAuth, (req, res) => {
+  db.prepare('UPDATE users SET discoverable = ? WHERE id = ?')
+    .run(req.body.value === '1' ? 1 : 0, req.user.id);
+  res.redirect('/u/' + req.user.username);
+});
+
 router.post('/logout', requireAuth, (req, res) => {
   destroySession(req.sessionToken);
   clearSessionCookie(res);

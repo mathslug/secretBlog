@@ -229,7 +229,7 @@ router.post('/comments/:id/delete', requireAuth, (req, res) => {
 });
 
 router.get('/u/:username', requireAuth, (req, res) => {
-  const person = db.prepare('SELECT id, username, display_name FROM users WHERE username = ?')
+  const person = db.prepare('SELECT id, username, display_name, discoverable FROM users WHERE username = ?')
     .get(String(req.params.username).toLowerCase());
   if (!person || !canViewPost({ user_id: person.id }, req.user.id)) {
     return res.status(404).render('error', {
@@ -246,6 +246,7 @@ router.get('/u/:username', requireAuth, (req, res) => {
   res.render('profile', {
     title: `@${person.username}`,
     person,
+    isMe: person.id === req.user.id,
     posts,
     limits: config.limits,
     fmtTime,

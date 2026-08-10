@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT NOT NULL UNIQUE,
   display_name TEXT NOT NULL,
   password_hash TEXT NOT NULL,
+  -- Opt-in: 1 means the account turns up in friend search.
+  discoverable INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -31,6 +33,18 @@ CREATE TABLE IF NOT EXISTS friend_requests (
   to_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (from_id, to_id)
+);
+
+-- Requests addressed to a username that has no account. They are never
+-- delivered or converted; they exist so that requesting a name that does not
+-- exist looks exactly like requesting one that does — same confirmation, same
+-- row in your sent list — and guessing usernames reveals nothing.
+CREATE TABLE IF NOT EXISTS unmatched_requests (
+  id INTEGER PRIMARY KEY,
+  from_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  username TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (from_id, username)
 );
 
 CREATE TABLE IF NOT EXISTS friendships (
@@ -70,6 +84,9 @@ CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 // Migrations for databases created before a column existed.
 if (!db.prepare("SELECT COUNT(*) AS c FROM pragma_table_info('posts') WHERE name = 'skipped'").get().c) {
   db.exec('ALTER TABLE posts ADD COLUMN skipped INTEGER NOT NULL DEFAULT 0');
+}
+if (!db.prepare("SELECT COUNT(*) AS c FROM pragma_table_info('users') WHERE name = 'discoverable'").get().c) {
+  db.exec('ALTER TABLE users ADD COLUMN discoverable INTEGER NOT NULL DEFAULT 0');
 }
 // node:sqlite has no transaction helper; wrap manually.
 function transaction(fn) {

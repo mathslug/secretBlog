@@ -28,10 +28,15 @@ still `slugclub` — only the public branding is Whorl.
 - Signup is open to anyone: username + password, no invite code. Usernames are
   stored lowercase, so capitals typed at signup or login are folded down.
   Feeds show you + your friends only.
-- New accounts start with no friends and an empty feed. There is no directory
-  of members: you only see the usernames of your friends and of people in a
-  pending request with you, so adding someone means knowing their username
-  already.
+- New accounts start with no friends and an empty feed.
+- **Discoverability** is off by default and toggled from your own profile. Off,
+  you can only be reached by someone typing your username exactly; on, you also
+  turn up in friend search. Nobody is ever listed wholesale.
+- Sending a friend request always reports success, whether or not the username
+  exists — a request to a name nobody holds is recorded in `unmatched_requests`
+  so it occupies your sent list exactly like a real one (it is never delivered
+  or converted). Guessing usernames therefore reveals nothing; an account
+  accepting is the only confirmation it exists.
 
 ## Stack
 

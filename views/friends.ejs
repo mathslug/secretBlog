@@ -4,11 +4,47 @@
   <% if (error) { %><p class="flash error"><%= error %></p><% } %>
   <% if (notice) { %><p class="flash ok"><%= notice %></p><% } %>
 
+  <form method="get" action="/friends" class="friend-add">
+    <input name="q" value="<%= query %>" placeholder="Search for friends"
+           autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+    <button>Search</button>
+  </form>
+
   <form method="post" action="/friends/request" class="friend-add">
-    <input name="username" placeholder="Add a friend by username"
+    <input name="username" placeholder="Add by exact username"
            autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" required>
     <button>Send request</button>
   </form>
+
+  <% if (query) { %>
+    <h2>Results for “<%= query %>”</h2>
+    <% if (results.length === 0) { %>
+      <p class="empty-inline">Nothing found. If you know their exact username, add them above.</p>
+    <% } %>
+    <div id="search-results">
+    <% results.forEach(function (p) { %>
+      <div class="friend-row">
+        <% if (p.isFriend) { %>
+          <a href="/u/<%= p.username %>"><strong>@<%= p.username %></strong></a>
+          <span class="handle">friends</span>
+        <% } else { %>
+          <span><strong>@<%= p.username %></strong></span>
+          <% if (p.incomingId) { %>
+            <form method="post" action="/friends/accept" class="inline-form">
+              <input type="hidden" name="request_id" value="<%= p.incomingId %>"><button>Accept</button>
+            </form>
+          <% } else if (p.requested) { %>
+            <span class="handle">requested</span>
+          <% } else { %>
+            <form method="post" action="/friends/request" class="inline-form">
+              <input type="hidden" name="username" value="<%= p.username %>"><button>Add</button>
+            </form>
+          <% } %>
+        <% } %>
+      </div>
+    <% }) %>
+    </div>
+  <% } %>
 
   <% if (incoming.length) { %>
     <h2>Requests for you</h2>
@@ -27,16 +63,20 @@
     <% }) %>
   <% } %>
 
-  <% if (outgoing.length) { %>
+  <% if (sent.length) { %>
     <h2>Sent requests</h2>
-    <% outgoing.forEach(function (r) { %>
+    <div id="sent-requests">
+    <% sent.forEach(function (r) { %>
       <div class="friend-row">
-        <span><strong><%= r.display_name %></strong> <span class="handle">@<%= r.username %></span></span>
+        <span><strong>@<%= r.username %></strong></span>
         <form method="post" action="/friends/decline" class="inline-form">
-          <input type="hidden" name="request_id" value="<%= r.id %>"><button class="linklike">Cancel</button>
+          <input type="hidden" name="request_id" value="<%= r.id %>">
+          <input type="hidden" name="unmatched" value="<%= r.unmatched ? '1' : '0' %>">
+          <button class="linklike">Cancel</button>
         </form>
       </div>
     <% }) %>
+    </div>
   <% } %>
 
   <h2>Your friends (<%= friends.length %>)</h2>

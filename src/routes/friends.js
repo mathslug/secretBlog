@@ -18,31 +18,84 @@ router.get('/friends', requireAuth, (req, res) => {
      JOIN users u ON u.id = r.from_id WHERE r.to_id = ? ORDER BY r.id DESC`
   ).all(me);
   const outgoing = db.prepare(
-    `SELECT r.id, u.id AS user_id, u.username, u.display_name FROM friend_requests r
-     JOIN users u ON u.id = r.to_id WHERE r.from_id = ? ORDER BY r.id DESC`
+    `SELECT r.id, u.id AS user_id, u.username FROM friend_requests r
+     JOIN users u ON u.id = r.to_id WHERE r.from_id = ?`
+  ).all(me);
+  const unmatched = db.prepare(
+    'SELECT id, username FROM unmatched_requests WHERE from_id = ?'
   ).all(me);
 
-  // There is deliberately no directory of everyone on the site: you only ever
-  // see the usernames of your friends and of people in a request with you.
-  // Adding someone means knowing their username already.
+  // Real and unmatched requests are rendered from one list, by username only,
+  // so a sent request to a name nobody holds is indistinguishable from one to
+  // a private account that simply hasn't accepted.
+  const sent = [
+    ...outgoing.map((r) => ({ id: r.id, username: r.username, unmatched: false })),
+    ...unmatched.map((r) => ({ id: r.id, username: r.username, unmatched: true }))
+  ].sort((a, b) => a.username.localeCompare(b.username));
+
+  // Search only ever matches accounts that opted in via the profile toggle.
+  // Everyone else can be reached, but only by typing their username exactly.
+  const query = String(req.query.q || '').trim().toLowerCase().replace(/^@/, '');
+  let results = [];
+  if (query) {
+    const like = '%' + query.replace(/[\\%_]/g, '\\$&') + '%';
+    const friendIds = new Set(friends.map((f) => f.id));
+    const incomingByUser = new Map(incoming.map((r) => [r.user_id, r.id]));
+    const outgoingUsers = new Set(outgoing.map((r) => r.user_id));
+    results = db.prepare(
+      `SELECT id, username FROM users
+       WHERE discoverable = 1 AND id != ? AND username LIKE ? ESCAPE '\\'
+       ORDER BY username LIMIT 25`
+    ).all(me, like).map((u) => ({
+      username: u.username,
+      isFriend: friendIds.has(u.id),
+      incomingId: incomingByUser.get(u.id) || null,
+      requested: outgoingUsers.has(u.id)
+    }));
+  }
+
   res.render('friends', {
     title: 'Friends',
     friends,
     incoming,
-    outgoing,
+    sent,
+    query,
+    results,
     error: req.query.err || null,
     notice: req.query.ok || null
   });
 });
 
+// Sending a request must look the same whether or not the username exists, so
+// that private accounts cannot be found by guessing. Every path below that
+// involves someone other than an existing friend ends in the same confirmation,
+// and an unmatched name is recorded so it also occupies your sent list. The
+// only true signal that an account exists is that it accepts.
 router.post('/friends/request', requireAuth, (req, res) => {
   const fail = (msg) => res.redirect('/friends?err=' + encodeURIComponent(msg));
   const ok = (msg) => res.redirect('/friends?ok=' + encodeURIComponent(msg));
   const username = String(req.body.username || '').trim().toLowerCase().replace(/^@/, '');
+  const sent = () => ok(`Request sent to @${username}.`);
+
+  // Names that can never be accounts are not stored; nothing about real
+  // accounts can be inferred from how they are handled.
+  if (!/^[a-z0-9_]{3,20}$/.test(username)) return sent();
+  if (username === req.user.username) return fail('That is you.');
+
   const target = db.prepare('SELECT id, username FROM users WHERE username = ?').get(username);
-  if (!target) return fail(`No user named @${username || '?'}.`);
-  if (target.id === req.user.id) return fail('That is you.');
-  if (areFriends(req.user.id, target.id)) return fail(`You are already friends with @${target.username}.`);
+  if (!target) {
+    try {
+      db.prepare('INSERT INTO unmatched_requests (from_id, username) VALUES (?, ?)')
+        .run(req.user.id, username);
+    } catch (e) {
+      if (!isConstraintError(e)) throw e; // already recorded; same reply
+    }
+    return sent();
+  }
+
+  if (areFriends(req.user.id, target.id)) {
+    return fail(`You are already friends with @${target.username}.`);
+  }
 
   // If they already asked us, this is an acceptance.
   const reverse = db.prepare('SELECT id FROM friend_requests WHERE from_id = ? AND to_id = ?')
@@ -55,11 +108,14 @@ router.post('/friends/request', requireAuth, (req, res) => {
   try {
     db.prepare('INSERT INTO friend_requests (from_id, to_id) VALUES (?, ?)')
       .run(req.user.id, target.id);
+    // Drop any placeholder from back when this name had no account, so the
+    // sent list never shows it twice.
+    db.prepare('DELETE FROM unmatched_requests WHERE from_id = ? AND username = ?')
+      .run(req.user.id, target.username);
   } catch (e) {
-    if (isConstraintError(e)) return fail('Request already sent.');
-    throw e;
+    if (!isConstraintError(e)) throw e; // already sent; same reply
   }
-  ok(`Request sent to @${target.username}.`);
+  sent();
 });
 
 const acceptRequest = transaction((requestId, me) => {
@@ -79,8 +135,13 @@ router.post('/friends/accept', requireAuth, (req, res) => {
 });
 
 router.post('/friends/decline', requireAuth, (req, res) => {
-  db.prepare('DELETE FROM friend_requests WHERE id = ? AND (to_id = ? OR from_id = ?)')
-    .run(Number(req.body.request_id), req.user.id, req.user.id);
+  if (req.body.unmatched === '1') {
+    db.prepare('DELETE FROM unmatched_requests WHERE id = ? AND from_id = ?')
+      .run(Number(req.body.request_id), req.user.id);
+  } else {
+    db.prepare('DELETE FROM friend_requests WHERE id = ? AND (to_id = ? OR from_id = ?)')
+      .run(Number(req.body.request_id), req.user.id, req.user.id);
+  }
   res.redirect('/friends');
 });
 

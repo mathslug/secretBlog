@@ -4,6 +4,13 @@
     <h1><%= person.display_name %></h1>
     <p class="handle">@<%= person.username %> · <%= posts.length %> post<%= posts.length === 1 ? '' : 's' %></p>
   </div>
+  <% if (isMe) { %>
+    <form method="post" action="/settings/discoverable" class="setting-row">
+      <span>Show up in friend search: <strong><%= person.discoverable ? 'on' : 'off' %></strong></span>
+      <input type="hidden" name="value" value="<%= person.discoverable ? '0' : '1' %>">
+      <button class="linklike"><%= person.discoverable ? 'Turn off' : 'Turn on' %></button>
+    </form>
+  <% } %>
   <% if (posts.length === 0) { %>
     <div class="empty"><p>No posts yet.</p></div>
   <% } %>
