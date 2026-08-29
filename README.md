@@ -1,11 +1,7 @@
 # 🐌 Whorl
 
-A tiny private social site at **whorl.mathslug.com** (the old
-slugclub.mathslug.com permanently redirects there). One short post a day, an
+A tiny private social site at **whorl.mathslug.com**. One short post a day, an
 essay every few, friends only. No likes, no messages, no algorithm.
-
-Internal names (the droplet, systemd service, env file, and system user) are
-still `slugclub` — only the public branding is Whorl.
 
 ## The rules
 
@@ -41,9 +37,11 @@ still `slugclub` — only the public branding is Whorl.
 ## Stack
 
 Node 24 + Express + EJS, SQLite via the built-in `node:sqlite` (WAL mode, no
-native deps) and sharp for image processing. Runs as a plain systemd service
-behind a native Caddy install (automatic HTTPS). No Docker. State lives in
-`/srv/app-data` (`app.db` + `images/`), untouched by deploys.
+native deps) and sharp for image processing. It runs in a rootless **podman**
+container managed by systemd on a Raspberry Pi, reached over a Cloudflare
+Tunnel — so there is no TLS, no reverse proxy and no open port configured here.
+State is `/data` in the container (`app.db` + `images/`), bind-mounted from the
+host and never touched by a deploy.
 
 ## Development
 
@@ -53,47 +51,66 @@ npm run dev            # http://localhost:3000, data in ./data
 # env: PORT, DATA_DIR, APP_TZ, DOMAIN
 ```
 
-## Deployment — no manual server steps
+## Deployment — pulled, not pushed
 
-Every push to `main` runs `.github/workflows/deploy.yml`:
+Nothing can reach the Pi from outside, so it fetches its own updates. A systemd
+timer runs one `git ls-remote` every 15 minutes and exits unless `main` has
+moved; when it has, the Pi pulls, rebuilds the image and restarts the
+container. A failed build leaves the previous container serving.
 
-1. `rsync` the app to `/srv/app` on the droplet and write `/etc/slugclub.env`
-   from Actions secrets/vars.
-2. Run `deploy/deploy.sh` (as root, over SSH) — an idempotent script that
-   installs swap, Node 24, and Caddy *if missing*, creates the `slugclub`
-   system user, runs `npm ci`, installs the systemd unit and Caddyfile, and
-   restarts both services. The first deploy bootstraps a bare droplet;
-   subsequent deploys just sync and restart.
-3. Health-check the service; the run fails loudly if it isn't healthy.
+**So a push to `main` is the deploy** — live within about 15 minutes, with
+nothing to run here. To skip the wait:
 
-Configuration lives in GitHub Actions **secrets** (`DEPLOY_HOST`,
-`DEPLOY_SSH_KEY`) and **variables** (`DOMAIN`, `OLD_DOMAIN`, `APP_TZ`). `OLD_DOMAIN` (optional) gets a permanent redirect to `DOMAIN`.
-To change the domain later: update the variables, add the new DNS record,
-re-run the workflow.
+```sh
+ssh mypi-remote 'sudo /opt/rpi/deploy-app.sh whorl'   # or `ssh mypi` on the LAN
+```
 
-## Infrastructure (DigitalOcean, created via doctl)
+The machinery lives in the **rpi** repo (`~/src/rpi`, cloned to `/opt/rpi` on
+the Pi). `apps/whorl.conf` there is this app's entire registration: the deploy,
+the auto-deploy timer, the nightly backup, the health dashboard and the tunnel
+ingress rule all read that one file.
 
-- Droplet `slugclub` (nyc1, s-1vcpu-1gb, Ubuntu 24.04), ID `584093059`.
-  `infra/cloud-init.yaml` is minimal — the deploy workflow does the real
-  bootstrap.
-- Reserved IP **24.199.66.225** → point DNS here (survives droplet rebuilds).
-- Cloud firewall `slugclub-fw`: inbound 22/80/443 only.
-- Deploy key: `~/.ssh/slugclub_deploy` (public key on the droplet, private
-  key in the `DEPLOY_SSH_KEY` Actions secret).
+What this repo has to hold up its end:
 
-DNS (at Namecheap): `A whorl → 24.199.66.225`, plus the legacy
-`A slugclub → 24.199.66.225` that powers the redirect. Caddy fetches TLS
-certificates for both automatically once the records resolve.
+- **`Containerfile`** — built *on* the Pi. sharp ships platform-specific
+  binaries, so an image built on an x86 machine will not run on arm64.
+- **`deploy/whorl.container`** — the Quadlet unit. systemd's
+  `podman-user-generator` turns it into `whorl.service`; there is no unit to
+  regenerate when it changes.
+- **`healthcheck.js`** — the container's health command. `/healthz` also backs
+  the dashboard's five-minute poll, so it must stay cheap.
+- **`snapshot.js`, at the repo root** — `VACUUM INTO`, run inside the container
+  by the off-box backup. It sits at the root because `.containerignore`
+  excludes `deploy/`.
+
+Configuration is `~podsvc/.config/whorl.env` on the Pi (`DOMAIN`, `APP_TZ`),
+written from the conf's `ENV_TEMPLATE` on the first deploy and left alone
+after.
+
+## Infrastructure (a Raspberry Pi at home)
+
+- The container runs as **`podsvc`**, a sudo-less account, under rootless
+  podman — an escape lands nowhere. `ssh mypi` on the LAN, `ssh mypi-remote`
+  from anywhere (through the tunnel, behind Cloudflare Access).
+- **No inbound ports.** `cloudflared` dials out and routes
+  `whorl.mathslug.com` to `127.0.0.1:3000`. Cloudflare terminates TLS and the
+  DNS record is a proxied one in Cloudflare, so a dynamic home IP is
+  irrelevant and there is no A record to maintain.
+- **State**: `~podsvc/data/whorl` on the Pi → `/data` in the container. The
+  database and the photos are the only things a rebuild cannot regenerate.
+- **Backups**: pulled nightly onto the workstation by the rpi repo's
+  `backup/pull-backups.sh` — `snapshot.js` writes a consistent snapshot inside
+  the container, `images/` is rsynced, and the copy that was *kept* is
+  verified. Fourteen dailies, eight weeklies, in `~/src/rpi/backups`.
+- **Memory**: capped at 512MB via `PodmanArgs=--memory=512m`. Size it against
+  the largest file, not the process: the cap covers page cache, and the
+  backup's `VACUUM INTO` pulls the whole database through it.
 
 ### Rebuilding from scratch
 
-```sh
-doctl compute droplet create slugclub --region nyc1 --size s-1vcpu-1gb \
-  --image ubuntu-24-04-x64 --ssh-keys <key-id> \
-  --user-data-file infra/cloud-init.yaml --wait
-doctl compute reserved-ip-action assign 24.199.66.225 <new-droplet-id>
-# then re-run the deploy workflow (Actions → deploy → Run workflow)
-```
-
-Note: photos and the database live in `/srv/app-data` on the droplet — take a
-snapshot or `rsync` that directory somewhere before destroying it.
+The Pi rebuilds from a wiped disk in about half an hour; that sequence is the
+rpi repo's `RECOVERY.md`. For this app alone, `deploy-app.sh whorl` clones,
+builds and starts it, and `backup/restore.sh` puts `~podsvc/data/whorl` back.
+An empty data directory is a valid starting state — `src/db.js` creates the
+schema and `images/` on first boot — so a restore is the only step that
+carries real information.
