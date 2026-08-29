@@ -1,12 +1,9 @@
-// Container health check.
+// Container health check, run by HealthCmd in deploy/whorl.container.
 //
-// A file rather than an inline `node -e "…"` in the Quadlet unit: podman's
-// Quadlet parser does not survive nested quotes, and silently truncates the
-// command at the first inner quote. The result is a container that reports
-// unhealthy forever with "Syntax error: Unterminated quoted string", while the
-// app itself is perfectly fine.
+// It has to be a file: Quadlet truncates a command at the first nested quote,
+// so an inline `node -e "…"` cannot carry one.
 //
-// node 24 has global fetch, so this needs nothing added to the image.
+// node 24 has a global fetch, so this adds nothing to the image.
 
 const port = process.env.PORT || 3000;
 

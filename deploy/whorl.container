@@ -1,11 +1,10 @@
 # Quadlet unit for whorl (rootless podman + systemd).
 #
-# Installed to ~/.config/containers/systemd/whorl.container on the host.
-# systemd's podman-user-generator turns this into whorl.service at boot;
-# there is no `podman generate systemd` step and no unit to regenerate when
-# this file changes — `systemctl --user daemon-reload` is enough.
+# Installed to ~/.config/containers/systemd/whorl.container on the host, where
+# systemd's podman-user-generator turns it into whorl.service. Changes here take
+# effect on `systemctl --user daemon-reload`; there is no unit to regenerate.
 #
-# Requires `loginctl enable-linger <user>` so it starts at boot without a login.
+# Starting at boot without a login needs `loginctl enable-linger <user>`.
 
 [Unit]
 Description=whorl — one photo a day, friends only
@@ -17,8 +16,8 @@ Wants=network-online.target
 ContainerName=whorl
 Image=localhost/whorl:latest
 
-# Loopback only. The public path is the Cloudflare tunnel, which reaches this
-# from the same host, so there is no reason to expose it on the LAN.
+# Loopback only: the Cloudflare tunnel reaches this from the same host, so the
+# LAN needs no access to it.
 PublishPort=127.0.0.1:3000:3000
 
 # %h is the owning user's home directory.
@@ -38,11 +37,11 @@ Environment=DATA_DIR=/data
 # `Memory=` key in [Container] and refuses to generate the unit if given one.
 PodmanArgs=--memory=512m
 
-# A script rather than an inline `node -e "…"`: Quadlet's parser does not
-# survive nested quotes and silently truncates the command at the first inner
-# quote, leaving the container permanently "unhealthy" with a shell syntax
-# error while the app is fine. Verify with `podman inspect --format
-# '{{.Config.Healthcheck.Test}}'` after any change here.
+# Quadlet truncates a command at the first nested quote, so the check is a file
+# rather than an inline `node -e "…"`. After changing this, confirm what the
+# container actually received:
+#
+#     podman inspect --format '{{.Config.Healthcheck.Test}}' whorl
 HealthCmd=node /app/healthcheck.js
 HealthInterval=30s
 HealthRetries=3
