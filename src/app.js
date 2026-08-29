@@ -9,6 +9,13 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '..', 'views'));
 app.set('trust proxy', true);
 
+app.use((req, res, next) => {
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'same-origin');
+  next();
+});
+
 app.use(express.urlencoded({ extended: false, limit: '64kb' }));
 // Assets keep their names across deploys, so browsers must revalidate them
 // (ETag 304s are cheap at this scale). Photos are immutable and get long
