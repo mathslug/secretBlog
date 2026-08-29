@@ -6,7 +6,6 @@ data/
 .git/
 .github/
 deploy/
-infra/
 scripts/
 *.log
 .DS_Store
