@@ -79,9 +79,6 @@ What this repo has to hold up its end:
   regenerate when it changes.
 - **`healthcheck.js`** — the container's health command. `/healthz` also backs
   the dashboard's five-minute poll, so it must stay cheap.
-- **`snapshot.js`, at the repo root** — `VACUUM INTO`, run inside the container
-  by the off-box backup. It sits at the root because `.containerignore`
-  excludes `deploy/`.
 
 Configuration is `~podsvc/.config/whorl.env` on the Pi (`DOMAIN`, `APP_TZ`),
 written from the conf's `ENV_TEMPLATE` on the first deploy and left alone
@@ -99,12 +96,11 @@ after.
 - **State**: `~podsvc/data/whorl` on the Pi → `/data` in the container. The
   database and the photos are the only things a rebuild cannot regenerate.
 - **Backups**: pulled nightly onto the workstation by the rpi repo's
-  `backup/pull-backups.sh` — `snapshot.js` writes a consistent snapshot inside
-  the container, `images/` is rsynced, and the copy that was *kept* is
-  verified. Fourteen dailies, eight weeklies, in `~/src/rpi/backups`.
+  `backup/pull-backups.sh` — it snapshots `app.db` with `VACUUM INTO` on the
+  Pi, `images/` is rsynced, and the copy that was *kept* is verified. Fourteen dailies, eight weeklies, in `~/src/rpi/backups`.
 - **Memory**: capped at 512MB via `PodmanArgs=--memory=512m`. Size it against
   the largest file, not the process: the cap covers page cache, and the
-  backup's `VACUUM INTO` pulls the whole database through it.
+  database the app reads passes through it.
 
 ### Rebuilding from scratch
 
