@@ -65,8 +65,8 @@ nothing to run here. To skip the wait:
 ssh mypi-remote 'sudo /opt/rpi/deploy-app.sh whorl'   # or `ssh mypi` on the LAN
 ```
 
-The machinery lives in the **rpi** repo (`~/src/rpi`, cloned to `/opt/rpi` on
-the Pi). `apps/whorl.conf` there is this app's entire registration: the deploy,
+The machinery lives in the **server_setup** repo (`~/src/server_setup`, cloned
+to `/opt/rpi` on the Pi). `apps/whorl.conf` there is this app's entire registration: the deploy,
 the auto-deploy timer, the nightly backup, the health dashboard and the tunnel
 ingress rule all read that one file.
 
@@ -95,9 +95,10 @@ after.
   irrelevant and there is no A record to maintain.
 - **State**: `~podsvc/data/whorl` on the Pi → `/data` in the container. The
   database and the photos are the only things a rebuild cannot regenerate.
-- **Backups**: pulled nightly onto the workstation by the rpi repo's
+- **Backups**: pulled daily onto the laptop by server_setup's
   `backup/pull-backups.sh` — it snapshots `app.db` with `VACUUM INTO` on the
-  Pi, `images/` is rsynced, and the copy that was *kept* is verified. Fourteen dailies, eight weeklies, in `~/src/rpi/backups`.
+  Pi, `images/` is rsynced, and the copy that was *kept* is verified. Fourteen
+  dailies, eight weeklies, in `~/src/server_setup/backups`.
 - **Memory**: capped at 512MB via `PodmanArgs=--memory=512m`. Size it against
   the largest file, not the process: the cap covers page cache, and the
   database the app reads passes through it.
