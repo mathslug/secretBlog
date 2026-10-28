@@ -91,10 +91,18 @@ function requireAuth(req, res, next) {
 }
 
 // Naive in-memory limiter for login/signup attempts.
+// Keyed on CF-Connecting-IP, which Cloudflare's edge sets to the real client
+// address and clients cannot override; X-Forwarded-For's leftmost entry is
+// client-supplied. The port is loopback-only, so production traffic always
+// arrives through the tunnel; the socket address is the local-dev fallback.
 const attempts = new Map();
 function rateLimit(req, res, next) {
-  const key = req.ip;
+  const key = req.get('cf-connecting-ip') || req.socket.remoteAddress;
   const now = Date.now();
+  // Expired entries are otherwise only replaced, never removed.
+  if (attempts.size > 10000) {
+    for (const [k, e] of attempts) if (now > e.resetAt) attempts.delete(k);
+  }
   let entry = attempts.get(key);
   if (!entry || now > entry.resetAt) {
     entry = { count: 0, resetAt: now + 15 * 60 * 1000 };

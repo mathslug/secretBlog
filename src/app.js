@@ -7,7 +7,6 @@ const app = express();
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '..', 'views'));
-app.set('trust proxy', true);
 
 app.use((req, res, next) => {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000');
