@@ -259,6 +259,10 @@ router.get('/u/:username', requireAuth, (req, res) => {
 router.get('/img/:name', requireAuth, (req, res) => {
   const name = req.params.name;
   if (!/^[a-f0-9]{32}\.webp$/.test(name)) return res.status(404).send('Not found');
+  // Same rule as the post itself: only its author and their friends. A login
+  // alone is not enough, or a removed friend could reopen saved photo URLs.
+  const owner = db.prepare('SELECT user_id FROM posts WHERE image = ?').get(name);
+  if (!owner || !canViewPost(owner, req.user.id)) return res.status(404).send('Not found');
   res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
   res.sendFile(path.join(imagesDir(), name), (err) => {
     if (err && !res.headersSent) res.status(404).send('Not found');

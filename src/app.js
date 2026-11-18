@@ -12,6 +12,9 @@ app.use((req, res, next) => {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'same-origin');
+  // Nothing here is meant to be framed, and any *.mathslug.com page counts as
+  // same-site for the Lax session cookie, so refuse framing outright.
+  res.setHeader('X-Frame-Options', 'DENY');
   next();
 });
 
